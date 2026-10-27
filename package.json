@@ -1,21 +1,22 @@
 {
-  "name": "react-ts-ntajdw3n",
-  "version": "0.0.0",
+  "name": "ostrovok-ai",
   "private": true,
-  "dependencies": {
-    "@types/react": "18.0.8",
-    "@types/react-dom": "18.0.2",
-    "lucide-react": "^1.62.0",
-    "react": "18.1.0",
-    "react-dom": "18.1.0"
-  },
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start",
+    "dev": "vite",
     "build": "vite build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/react": "^18.0.8",
+    "@types/react-dom": "^18.0.2",
+    "lucide-react": "^1.62.0",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
   },
   "devDependencies": {
-    "react-scripts": "latest"
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.4"
   }
 }
