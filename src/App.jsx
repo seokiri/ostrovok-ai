@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Send, Sparkles, Compass, Hotel, Plane, 
-  ArrowRight, RefreshCw, CheckCircle2, X
+  ArrowRight, RefreshCw, CheckCircle2, X, AlertTriangle, ShieldCheck, Dog, Activity
 } from 'lucide-react';
 
+// Пресеты для вдохновения (Задача 2)
 const presetCards = [
   { 
     id: 1, 
@@ -33,24 +34,48 @@ const presetCards = [
     tag: "Природа", 
     image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80" 
   },
-  { 
-    id: 5, 
-    title: "Спонтанный уикенд", 
-    subtitle: "Сочи • Море и горы сразу", 
-    tag: "Быстро", 
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" 
-  },
 ];
 
 export default function App() {
-  const [messages, setMessages] = useState([
-    { sender: 'ai', text: 'Привет! Я твой личный тревел-агент от Островка. Куда бы ты хотел отправиться или какой вайб ищешь?' }
-  ]);
+  // Состояние чата и памяти (Доп. задача 2 - Память)
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('ostrovok_chat_history');
+    return saved ? JSON.parse(saved) : [
+      { sender: 'ai', text: 'Привет! Я AI-агент Островка. Расскажи, какой вайб поездки ты ищешь или куда хочешь отправиться?' }
+    ];
+  });
+
   const [inputQuery, setInputQuery] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showVoucher, setShowVoucher] = useState(false);
+  const [showMetrics, setShowMetrics] = useState(false); // Доп. задача 3 - Метрики
+  const [postActionNotice, setPostActionNotice] = useState(''); // Доп. задача 1 - Пост-сервис
 
+  // Состояние текущей сборки поездки (Задачи 3, 5, 6)
+  const [tripPlan, setTripPlan] = useState({
+    destination: 'Анталья, Турция',
+    hotelName: 'Sunrise Garden Resort & Spa',
+    hotelStars: '5★',
+    hotelRating: '9.4',
+    hotelTags: 'Всё включено • Пляжная линия • Pet-Friendly',
+    reason: 'Идеальный подогреваемый бассейн для ребенка и высокий рейтинг сервиса.',
+    risk: 'Трансфер из аэропорта займет 45 минут.',
+    flight: 'Москва (VKO) ➔ Анталья (AYT)',
+    flightDate: '15 ноя, 06:05',
+    isDirectFlight: true,
+    price: 84500,
+    hasPet: false,
+    earlyCheckIn: false,
+    synced: true
+  });
+
+  // Автосохранение истории (Доп. задача 2)
+  useEffect(() => {
+    localStorage.setItem('ostrovok_chat_history', JSON.stringify(messages));
+  }, [messages]);
+
+  // Обработка сообщений и пересборки плана (Задачи 1, 4, 6)
   const handleSend = (textToSend) => {
     const query = textToSend || inputQuery;
     if (!query.trim()) return;
@@ -62,19 +87,48 @@ export default function App() {
     setLoading(true);
 
     setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        { 
-          sender: 'ai', 
-          text: `Отличный выбор! Я проанализировал твой запрос ("${query}"). Подобрал идеальную связку: уютный бутик-отель с рейтингом 9.4, прямые перелеты без ночных стыковок и трансфер прямо к побережью. Посмотри справа детали и смету поездки!` 
-        }
-      ]);
-      setLoading(false);
-    }, 1200);
-  };
+      let aiResponse = '';
+      const lowerQuery = query.toLowerCase();
 
-  const handleQuickAction = (actionText) => {
-    handleSend(actionText);
+      // Логика пересборки плана (Задача 6)
+      if (lowerQuery.includes('дешевле') || lowerQuery.includes('бюджет')) {
+        setTripPlan(prev => ({
+          ...prev,
+          hotelName: 'Blue Wave Boutique Hotel',
+          hotelStars: '4★',
+          hotelRating: '8.8',
+          price: 67600,
+          reason: 'Переключили на уютный 4★ отель на второй линии. Экономия 20%.',
+          risk: 'До пляжа 7 минут пешком.'
+        }));
+        aiResponse = 'Пересобрал вариант! Заменил отель на отличный бутик-отель 4★. Бюджет снизился на 20% (до 67 600 ₽). Состыковки рейса и трансфера сохранены!';
+      } 
+      else if (lowerQuery.includes('собака') || lowerQuery.includes('питомец')) {
+        setTripPlan(prev => ({
+          ...prev,
+          hasPet: true,
+          price: prev.price + 4500,
+          hotelTags: prev.hotelTags + ' • Проживание с животными',
+          reason: 'Отель официально принимает гостей с собаками до 10 кг. Добавлен Pet-трансфер.',
+          risk: 'Потребуется справка Вет-1 для авиаперелета.'
+        }));
+        aiResponse = 'Понял! Добавил опцию Pet-Friendly. Подобрал отель с услугой размещения с животными и включил билет для питомца в смету (+4 500 ₽).';
+      }
+      else if (lowerQuery.includes('позже') || lowerQuery.includes('даты')) {
+        setTripPlan(prev => ({
+          ...prev,
+          flightDate: '17 ноя, 08:30',
+          reason: 'Сдвинули даты на +2 дня. Билеты на этот рейс даже немного дешевле.',
+        }));
+        aiResponse = 'Даты успешно сдвинуты на 2 дня вперед (17 ноября). Перепроверил доступность номеров и состыковку с трансфером — всё подтверждено!';
+      }
+      else {
+        aiResponse = `Проанализировал твой запрос ("${query}"). Подобрал оптимальную связку: отель ${tripPlan.hotelStars} с высоким рейтингом, прямые перелеты и трансфер. Вся логика выбора и сметы отображена справа!`;
+      }
+
+      setMessages([...newMessages, { sender: 'ai', text: aiResponse }]);
+      setLoading(false);
+    }, 1100);
   };
 
   return (
@@ -91,19 +145,48 @@ export default function App() {
             <span className="text-xs block text-teal-300/80 font-semibold">AI Travel Agent</span>
           </div>
         </div>
-        {isChatOpen && (
+
+        <div className="flex items-center space-x-3">
+          {/* Переключатель Метрик Агента (Доп. задача 3) */}
           <button 
-            onClick={() => setIsChatOpen(false)}
-            className="text-xs font-bold bg-slate-800 border border-teal-700/50 hover:bg-slate-700 px-4 py-2 rounded-xl transition flex items-center space-x-1 text-teal-200 shadow-sm"
+            onClick={() => setShowMetrics(!showMetrics)}
+            className="text-xs bg-slate-800/80 border border-teal-700/50 hover:bg-slate-700 px-3 py-2 rounded-xl transition flex items-center space-x-1.5 text-teal-300"
+            title="Показать метрики качества работы агента"
           >
-            <span>На главную</span>
+            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Метрики Агента</span>
           </button>
-        )}
+
+          {isChatOpen && (
+            <button 
+              onClick={() => setIsChatOpen(false)}
+              className="text-xs font-bold bg-slate-800 border border-teal-700/50 hover:bg-slate-700 px-4 py-2 rounded-xl transition text-teal-200 shadow-sm"
+            >
+              На главную
+            </button>
+          )}
+        </div>
       </header>
+
+      {/* Панель метрик качества (Доп. задача 3) */}
+      {showMetrics && (
+        <div className="bg-[#0A2234] border-b border-teal-800/50 px-6 py-3 text-xs flex flex-wrap items-center justify-between gap-4 text-teal-200 animate-fadeIn">
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span className="font-bold text-white">Качество работы AI-агента:</span>
+          </div>
+          <div className="flex items-center space-x-6">
+            <div>Время до 1-й рекомендации: <b className="text-emerald-400">1.1s</b></div>
+            <div>Успешность сценариев: <b className="text-emerald-400">98.4%</b></div>
+            <div>Ошибки состыковок: <b className="text-emerald-400">0%</b></div>
+            <div>Уточнений в среднем: <b className="text-amber-300">1.2 вопроса</b></div>
+          </div>
+        </div>
+      )}
 
       {/* Основной контент */}
       {!isChatOpen ? (
-        /* ГЛАВНАЯ СТРАНИЦА */
+        /* ГЛАВНАЯ СТРАНИЦА - ВДОХНОВЕНИЕ И ВВОД */
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-10 max-w-6xl mx-auto w-full">
           
           <div className="text-center mb-8 space-y-3">
@@ -116,7 +199,7 @@ export default function App() {
             </p>
           </div>
 
-          {/* 1. КАРТОЧКИ С ФОНОВЫМИ КАРТИНКАМИ И ЧЕТКИМИ ГРАНИЦАМИ */}
+          {/* Карточки направлений (Задача 2) */}
           <div className="w-full overflow-x-auto py-6 mb-4 no-scrollbar">
             <div className="flex space-x-5 w-max mx-auto px-4">
               {presetCards.map((card) => (
@@ -130,7 +213,6 @@ export default function App() {
                     alt={card.title} 
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-500 opacity-80"
                   />
-                  {/* Четкое контрастное градиентное затемнение */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#071927] via-[#071927]/60 to-transparent"></div>
 
                   <div className="relative z-10">
@@ -147,7 +229,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* 2. СТРОКА ВВОДА */}
+          {/* Строка ввода естественного языка (Задача 1) */}
           <div className="w-full max-w-2xl relative mt-2">
             <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 via-emerald-500 to-amber-400 rounded-2xl blur-md opacity-30"></div>
             <div className="relative bg-[#0E2838] border border-teal-600/60 rounded-2xl p-2 flex items-center shadow-2xl">
@@ -156,7 +238,7 @@ export default function App() {
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Например: хочу к теплому морю в ноябре, недорого с ребенком..."
+                placeholder="Например: хочу к морю в ноябре, недорого с ребенком и собакой..."
                 className="w-full bg-transparent px-4 py-3 text-white placeholder-slate-400 text-sm md:text-base focus:outline-none"
               />
               <button 
@@ -170,20 +252,20 @@ export default function App() {
 
         </main>
       ) : (
-        /* СТРАНИЦА ЧАТА И КАРТОЧЕК */
+        /* СТРАНИЦА ЧАТА И КОРЗИНЫ СЦЕНАРИЯ */
         <main className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 md:p-6 overflow-hidden">
           
-          {/* Левая колонка: Чат с ИИ */}
+          {/* Левая колонка: Чат с ИИ (Задачи 1, 4, 6) */}
           <div className="lg:col-span-7 bg-[#0E2838] border border-teal-800/50 rounded-2xl flex flex-col h-[calc(100vh-140px)] overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-teal-800/50 bg-[#0A1F2C] flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400"></div>
                 <span className="font-bold text-sm text-white">AI Консьерж на связи</span>
               </div>
-              <span className="text-xs text-teal-300 font-medium">Анализ в реальном времени</span>
+              <span className="text-xs text-teal-300 font-medium">Анализ запроса в реальном времени</span>
             </div>
 
-            {/* Сообщения */}
+            {/* Окно сообщений */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((m, idx) => (
                 <div key={idx} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -200,21 +282,21 @@ export default function App() {
                 <div className="flex justify-start">
                   <div className="bg-[#153448] border border-teal-700/40 rounded-2xl px-4 py-3 text-sm text-teal-200 flex items-center space-x-2">
                     <RefreshCw className="w-4 h-4 animate-spin text-teal-400" />
-                    <span>Агент подбирает лучшие варианты и проверяет состыковки...</span>
+                    <span>Агент подбирает варианты, проверяет состыковки и риски...</span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Кнопки быстрого ответа */}
+            {/* Быстрые кнопки пересборки плана (Задача 6) */}
             <div className="p-3 bg-[#0A1F2C] border-t border-teal-800/50 flex gap-2 overflow-x-auto no-scrollbar">
-              <button onClick={() => handleQuickAction("📉 Сделай дешевле на 20%")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-teal-700/50 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
+              <button onClick={() => handleSend("📉 Сделай дешевле на 20%")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-teal-700/50 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
                 📉 Дешевле на 20%
               </button>
-              <button onClick={() => handleQuickAction("🐶 С нами едет собака")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-teal-700/50 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
+              <button onClick={() => handleSend("🐶 С нами едет собака")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-teal-700/50 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
                 🐶 Едем с собакой
               </button>
-              <button onClick={() => handleQuickAction("📅 Сдвинь даты на 2 дня вперед")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-teal-700/50 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
+              <button onClick={() => handleSend("📅 Сдвинь даты на 2 дня вперед")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-teal-700/50 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
                 📅 На 2 дня позже
               </button>
             </div>
@@ -226,7 +308,7 @@ export default function App() {
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Напиши уточнение или правку..."
+                placeholder="Напиши уточнение или условие..."
                 className="flex-1 bg-[#153448] border border-teal-700/50 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-teal-400 text-white placeholder-slate-400"
               />
               <button 
@@ -238,7 +320,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Правая колонка: План поездки */}
+          {/* Правая колонка: План поездки, состыковки и объяснения (Задачи 3, 4, 5) */}
           <div className="lg:col-span-5 flex flex-col space-y-4 h-[calc(100vh-140px)] overflow-y-auto pr-1">
             
             <div className="bg-[#0E2838] border border-teal-800/50 rounded-2xl p-5 shadow-2xl space-y-4">
@@ -247,33 +329,40 @@ export default function App() {
                   <Compass className="w-5 h-5 text-teal-400" />
                   <span>Сценарий вашей поездки</span>
                 </h2>
-                <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full font-bold shadow-sm">
-                  Состыковано ✓
+                
+                {/* Состыковка (Задача 3 и 5) */}
+                <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full font-bold shadow-sm flex items-center space-x-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Состыковано ✓</span>
                 </span>
               </div>
 
-              {/* Отель */}
-              <div className="bg-[#153448] border border-teal-700/40 rounded-xl p-4 space-y-2 shadow-sm">
+              {/* Карточка отеля */}
+              <div className="bg-[#153448] border border-teal-700/40 rounded-xl p-4 space-y-2.5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-amber-300 flex items-center space-x-1 tracking-wide">
                     <Hotel className="w-3.5 h-3.5" />
-                    <span>ОТЕЛЬ 5★</span>
+                    <span>ОТЕЛЬ {tripPlan.hotelStars}</span>
                   </span>
                   <span className="text-xs bg-teal-900/90 font-bold px-2 py-0.5 rounded text-teal-200 border border-teal-600/50">
-                    9.4 из 10
+                    {tripPlan.hotelRating} из 10
                   </span>
                 </div>
-                <h4 className="font-bold text-base text-white">Sunrise Garden Resort & Spa</h4>
-                <p className="text-xs text-slate-300">Всё включено • Пляжная линия • Бесплатная отмена до 14 ноя</p>
+                <h4 className="font-bold text-base text-white">{tripPlan.hotelName}</h4>
+                <p className="text-xs text-slate-300">{tripPlan.hotelTags}</p>
                 
-                {/* Подсказка */}
-                <div className="text-xs text-amber-100 bg-amber-950/60 border border-amber-500/30 p-3 rounded-lg leading-relaxed shadow-inner">
-                  <span className="inline-block font-bold text-amber-300 mb-0.5">💡 Почему этот выбор:</span>
-                  <p className="text-amber-100/90">Идеальный подогреваемый бассейн для ребенка, но трансфер до аэропорта займет 45 минут.</p>
+                {/* Объяснение выбора ИИ (Задача 4) */}
+                <div className="text-xs text-amber-100 bg-amber-950/50 border border-amber-500/30 p-3 rounded-lg leading-relaxed space-y-1">
+                  <div className="font-bold text-amber-300">💡 Почему этот выбор:</div>
+                  <div>{tripPlan.reason}</div>
+                  <div className="text-amber-200/80 pt-1 flex items-center space-x-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span><b>Риск/ограничение:</b> {tripPlan.risk}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Перелет */}
+              {/* Карточка перелета */}
               <div className="bg-[#153448] border border-teal-700/40 rounded-xl p-4 space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-teal-300 flex items-center space-x-1 tracking-wide">
@@ -285,55 +374,14 @@ export default function App() {
                   </span>
                 </div>
                 <div className="flex justify-between text-xs font-semibold text-white">
-                  <span>Москва (VKO) ➔ Анталья (AYT)</span>
-                  <span className="text-teal-300">15 ноя, 06:05</span>
+                  <span>{tripPlan.flight}</span>
+                  <span className="text-teal-300">{tripPlan.flightDate}</span>
                 </div>
               </div>
 
-              {/* Итог и кнопка бронирования */}
-              <div className="pt-3 border-t border-teal-800/50 flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-slate-300 block font-medium">Итого за всё:</span>
-                  <span className="text-2xl font-black text-amber-300 tracking-tight">84 500 ₽</span>
-                </div>
-                
-                <button 
-                  onClick={() => setShowVoucher(true)}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-sm font-black px-6 py-3 rounded-xl transition shadow-lg shadow-emerald-500/20 active:scale-95"
-                >
-                  Забронировать
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </main>
-      )}
-
-      {/* Модальное окно успешного бронирования */}
-      {showVoucher && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0E2838] border border-teal-600/50 rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl relative">
-            <button onClick={() => setShowVoucher(false)} className="absolute top-4 right-4 text-teal-400 hover:text-white transition">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-extrabold text-white">Бронирование успешно!</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Ваучер поездки отправлен на вашу почту. Агент зафиксировал все параметры и ждет вас для планирования следующих путешествий!
-            </p>
-            <button 
-              onClick={() => { setShowVoucher(false); setIsChatOpen(false); }}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 py-3 rounded-xl font-black text-sm transition shadow-lg shadow-emerald-500/20"
-            >
-              Вернуться на главную
-            </button>
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
-}
+              {/* Опция питомца (если добавлена) */}
+              {tripPlan.hasPet && (
+                <div className="bg-teal-950/60 border border-teal-700/50 rounded-xl p-3 text-xs flex items-center justify-between text-teal-200">
+                  <div className="flex items-center space-x-2">
+                    <Dog className="w-4 h-4 text-amber-300" />
+                  
