@@ -82,7 +82,7 @@ export default function App() {
       
       {/* Шапка */}
       <header className="border-b border-cyan-900/40 bg-[#07131E]/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => setIsChatOpen(false)}>
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setIsChatOpen(false)}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
             <Sparkles className="w-5 h-5 text-slate-950" />
           </div>
@@ -94,7 +94,7 @@ export default function App() {
         {isChatOpen && (
           <button 
             onClick={() => setIsChatOpen(false)}
-            className="text-xs font-semibold bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition flex items-center space-x-1.5 text-cyan-200 shadow-sm"
+            className="text-xs font-semibold bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition flex items-center space-x-1 text-cyan-200 shadow-sm"
           >
             <span>На главную</span>
           </button>
@@ -117,8 +117,8 @@ export default function App() {
           </div>
 
           {/* 1. КАРТОЧКИ С ФОНОВЫМИ КАРТИНКАМИ (С ОТСТУПАМИ ДЛЯ ЭФФЕКТА HOVER) */}
-          <div className="w-full overflow-x-auto py-4 mb-6 no-scrollbar">
-            <div className="flex space-x-5 w-max mx-auto px-4 py-2">
+          <div className="w-full overflow-x-auto py-6 mb-4 no-scrollbar">
+            <div className="flex space-x-5 w-max mx-auto px-4">
               {presetCards.map((card) => (
                 <div 
                   key={card.id}
@@ -162,9 +162,9 @@ export default function App() {
               />
               <button 
                 onClick={() => handleSend()}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg shadow-emerald-500/30 flex items-center justify-center shrink-0"
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold p-3 rounded-xl transition shadow-lg shadow-emerald-500/30 flex items-center justify-center shrink-0"
               >
-                <ArrowRight className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+                <ArrowRight className="w-5 h-5 text-slate-950" />
               </button>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function App() {
           {/* Левая колонка: Чат с ИИ */}
           <div className="lg:col-span-7 bg-[#0E2232]/80 border border-cyan-900/50 rounded-2xl flex flex-col h-[calc(100vh-140px)] overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-cyan-900/50 bg-[#0E2232] flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
+              <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400"></div>
                 <span className="font-bold text-sm text-white">AI Консьерж на связи</span>
               </div>
@@ -188,7 +188,7 @@ export default function App() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((m, idx) => (
                 <div key={idx} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4.5 py-3 text-sm leading-relaxed ${
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     m.sender === 'user' 
                       ? 'bg-cyan-600 text-white font-medium rounded-br-none shadow-lg shadow-cyan-600/20' 
                       : 'bg-[#152E42] border border-cyan-800/50 text-slate-100 rounded-bl-none shadow-sm'
@@ -199,7 +199,7 @@ export default function App() {
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#152E42] border border-cyan-800/40 rounded-2xl px-4 py-3 text-sm text-cyan-200 flex items-center space-x-2.5">
+                  <div className="bg-[#152E42] border border-cyan-800/40 rounded-2xl px-4 py-3 text-sm text-cyan-200 flex items-center space-x-2">
                     <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
                     <span>Агент подбирает лучшие варианты и проверяет состыковки...</span>
                   </div>
@@ -209,13 +209,13 @@ export default function App() {
 
             {/* Быстрые кнопки пересборки */}
             <div className="p-3 bg-[#0E2232] border-t border-cyan-900/50 flex gap-2 overflow-x-auto no-scrollbar">
-              <button onClick={() => handleQuickAction("📉 Сделай дешевле на 20%")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
+              <button onClick={() => handleQuickAction("📉 Сделай дешевле на 20%")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
                 📉 Дешевле на 20%
               </button>
-              <button onClick={() => handleQuickAction("🐶 С нами едет собака")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
+              <button onClick={() => handleQuickAction("🐶 С нами едет собака")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
                 🐶 Едем с собакой
               </button>
-              <button onClick={() => handleQuickAction("📅 Сдвинь даты на 2 дня вперед")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
+              <button onClick={() => handleQuickAction("📅 Сдвинь даты на 2 дня вперед")} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow-sm">
                 📅 На 2 дня позже
               </button>
             </div>
@@ -234,7 +234,7 @@ export default function App() {
                 onClick={() => handleSend()}
                 className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 p-2.5 rounded-xl transition shadow-md shadow-emerald-500/20"
               >
-                <Send className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                <Send className="w-4 h-4 text-slate-950" />
               </button>
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function App() {
               </div>
 
               {/* Отель */}
-              <div className="bg-[#152E42] border border-cyan-800/50 rounded-xl p-4 space-y-2.5 shadow-sm">
+              <div className="bg-[#152E42] border border-cyan-800/50 rounded-xl p-4 space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-cyan-300 flex items-center space-x-1 tracking-wide">
                     <Hotel className="w-3.5 h-3.5" />
@@ -267,7 +267,7 @@ export default function App() {
                 <h4 className="font-bold text-base text-white">Sunrise Garden Resort & Spa</h4>
                 <p className="text-xs text-slate-300">Всё включено • Пляжная линия • Бесплатная отмена до 14 ноя</p>
                 
-                {/* Блок «Почему этот выбор» с четким фоном */}
+                {/* Блок «Почему этот выбор» */}
                 <div className="text-xs text-sky-100 bg-sky-950/80 border border-sky-500/40 p-3 rounded-lg leading-relaxed shadow-inner">
                   <span className="inline-block font-bold text-sky-300 mb-0.5">💡 Почему этот выбор:</span>
                   <p className="text-sky-100/90">Идеальный подогреваемый бассейн для ребенка, но трансфер до аэропорта займет 45 минут.</p>
@@ -275,7 +275,7 @@ export default function App() {
               </div>
 
               {/* Перелет */}
-              <div className="bg-[#152E42] border border-cyan-800/50 rounded-xl p-4 space-y-2.5 shadow-sm">
+              <div className="bg-[#152E42] border border-cyan-800/50 rounded-xl p-4 space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-cyan-300 flex items-center space-x-1 tracking-wide">
                     <Plane className="w-3.5 h-3.5" />
@@ -298,7 +298,6 @@ export default function App() {
                   <span className="text-2xl font-black text-white tracking-tight">84 500 ₽</span>
                 </div>
                 
-                {/* Акцентная яркая кнопка заката/пляжа */}
                 <button 
                   onClick={() => setShowVoucher(true)}
                   className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-sm font-extrabold px-6 py-3 rounded-xl transition shadow-lg shadow-orange-500/25 active:scale-95"
@@ -314,4 +313,28 @@ export default function App() {
 
       {/* Модальное окно успешного бронирования */}
       {showVoucher && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0E2232] border border-cyan-600/50 rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl relative">
+            <button onClick={() => setShowVoucher(false)} className="absolute top-4 right-4 text-cyan-400 hover:text-white transition">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-extrabold text-white">Бронирование успешно!</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Ваучер поездки отправлен на вашу почту. Агент зафиксировал все параметры и ждет вас для планирования следующих путешествий!
+            </p>
+            <button 
+              onClick={() => { setShowVoucher(false); setIsChatOpen(false); }}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl font-extrabold text-sm transition shadow-lg shadow-emerald-500/20"
+            >
+              Вернуться на главную
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
