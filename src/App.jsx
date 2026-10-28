@@ -158,10 +158,10 @@ export default function App() {
 return (
     <div className="min-h-screen bg-gradient-to-br from-[#030712] via-[#0B132B] to-[#1C2541] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
       
-      {/* Боковая панель истории чатов (выезжает слева) */}
+      {/* Левая выезжающая шторка истории */}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex">
-          <div className="w-80 bg-[#0B132B] border-r border-cyan-500/20 p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300">
+          <div className="w-80 bg-[#0B132B] border-r border-cyan-500/20 p-5 flex flex-col justify-between shadow-2xl">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-cyan-900/40">
                 <span className="font-extrabold text-sm text-cyan-300 tracking-wider">ИСТОРИЯ ДИАЛОГОВ</span>
@@ -249,7 +249,6 @@ return (
       {/* Основной контент */}
       {!isChatOpen ? (
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-10 max-w-6xl mx-auto w-full">
-          
           <div className="text-center mb-8 space-y-3">
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
               Куда хочешь отправиться? <br/>
@@ -308,7 +307,6 @@ return (
               </button>
             </div>
           </div>
-
         </main>
       ) : (
         <main className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 md:p-6 overflow-hidden">
@@ -377,7 +375,6 @@ return (
 
           {/* Правая колонка: Сравнение отелей и сценарий */}
           <div className="lg:col-span-5 flex flex-col space-y-4 h-[calc(100vh-140px)] overflow-y-auto pr-1">
-            
             <div className="bg-[#0B132B]/90 border border-cyan-900/40 rounded-2xl p-5 shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-cyan-900/40 pb-3">
                 <h2 className="font-bold text-base flex items-center space-x-2 text-white">
@@ -389,7 +386,6 @@ return (
                 </span>
               </div>
 
-              {/* Выбор варианта отеля */}
               <div className="space-y-2">
                 <span className="text-xs font-semibold text-cyan-300">Доступные варианты (нажмите для выбора):</span>
                 <div className="grid grid-cols-3 gap-2">
@@ -410,7 +406,6 @@ return (
                 </div>
               </div>
 
-              {/* Активный отель */}
               <div className="bg-[#152238] border border-cyan-800/40 rounded-xl p-4 space-y-2.5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-cyan-300 flex items-center space-x-1">
@@ -434,7 +429,6 @@ return (
                 </div>
               </div>
 
-              {/* Перелет */}
               <div className="bg-[#152238] border border-cyan-800/40 rounded-xl p-4 space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-cyan-300 flex items-center space-x-1">
@@ -477,33 +471,61 @@ return (
                 </button>
               </div>
             </div>
-
           </div>
         </main>
       )}
 
-      {/* Модальная страница подробных метрик (решает проблему сокращений) */}
-      {showMetricsModal && (
+      {/* Вызов модалки метрик */}
+      {showMetricsModal && <MetricsModal onClose={() => setShowMetricsModal(false)} />}
+
+      {/* Модальное окно ваучера */}
+      {showVoucher && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0B132B] border border-cyan-500/40 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative">
-            <button onClick={() => setShowMetricsModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <div className="bg-[#0B132B] border border-cyan-600/50 rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl relative">
+            <button onClick={() => setShowVoucher(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
               <X className="w-5 h-5" />
             </button>
-            <div className="flex items-center space-x-3 border-b border-cyan-900/40 pb-3">
-              <ShieldCheck className="w-6 h-6 text-emerald-400" />
-              <h3 className="text-lg font-extrabold text-white">Детальный отчет качества AI-агента</h3>
+            <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto shadow-lg">
+              <CheckCircle2 className="w-8 h-8" />
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="bg-[#152238] p-4 rounded-xl border border-cyan-900/50 space-y-1">
-                <div className="font-bold text-cyan-300">Время до первой рекомендации</div>
-                <div className="text-xl font-black text-white">1.1 секунды</div>
-                <div className="text-slate-400">Замер от отправки запроса пользователем до генерации первой связки отеля и рейса.</div>
+            <h3 className="text-xl font-extrabold text-white">Бронирование успешно!</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Ваучер отправлен на вашу почту. Агент зафиксировал тур в системе.
+            </p>
+
+            <div className="border-t border-cyan-900/40 pt-3 text-left space-y-2">
+              <span className="text-xs font-bold text-cyan-300 block">Управление бронированием:</span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button 
+                  onClick={() => setPostActionNotice('Ранний заезд запрошен в отель!')}
+                  className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-slate-200 border border-cyan-900/40"
+                >
+                  🏨 Ранний заезд
+                </button>
+                <button 
+                  onClick={() => setPostActionNotice('VIP трансфер подтвержден!')}
+                  className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-slate-200 border border-cyan-900/40"
+                >
+                  🚖 VIP Трансфер
+                </button>
               </div>
-              <div className="bg-[#152238] p-4 rounded-xl border border-cyan-900/50 space-y-1">
-                <div className="font-bold text-cyan-300">Успешность сценариев (Success Rate)</div>
-                <div className="text-xl font-black text-emerald-400">98.4%</div>
-                <div className="text-slate-400">Доля диалогов, успешно доведенных до этапа бронирования или выдачи точного ответа.</div>
-              </div>
-              <div className="bg-[#152238] p-4 rounded-xl border border-cyan-900/50 space-y-1">
-                <div className="font-bold text-cyan-300">Ошибки состыковок
+              {postActionNotice && (
+                <div className="text-xs text-emerald-300 bg-emerald-950/60 p-2 rounded-lg text-center font-medium">
+                  ✓ {postActionNotice}
+                </div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => { setShowVoucher(false); setIsChatOpen(false); setPostActionNotice(''); }}
+              className="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 py-3 rounded-xl font-black text-sm transition shadow-lg mt-2"
+            >
+              Вернуться на главную
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
