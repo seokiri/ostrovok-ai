@@ -1,409 +1,635 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Send, Sparkles, Compass, Hotel, Plane, 
-  ArrowRight, RefreshCw, CheckCircle2, X, AlertTriangle, ShieldCheck, Dog, Activity, Menu, Plus, MessageSquare 
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Send, Sparkles, Compass, Hotel, Plane, ArrowRight, RefreshCw,
+  CheckCircle2, X, AlertTriangle, ShieldCheck, Dog, Activity,
+  Menu, Plus, MessageSquare, MapPin
+} from "lucide-react";
+
+const API_URL = "https://ostrovok-ai.onrender.com/api/chat";
 
 const presetCards = [
-  { 
-    id: 1, 
-    destinationKey: 'japan',
-    title: "Маршрут для зумеров", 
-    subtitle: "Токио и Киото • 7 дней • Инста-места", 
-    tag: "В тренде 🔥", 
-    image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80" 
+  {
+    id: 1, destinationKey: "japan",
+    title: "Маршрут для зумеров",
+    subtitle: "Токио и Киото • 7 дней • Инста-места",
+    tag: "В тренде 🔥",
+    image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80"
   },
-  { 
-    id: 2, 
-    destinationKey: 'georgia',
-    title: "Тбилиси • Инста-тур", 
-    subtitle: "Грузия • 4 дня • Уютные дворики", 
-    tag: "Хит недели", 
-    image: "https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=800&q=80" 
+  {
+    id: 2, destinationKey: "georgia",
+    title: "Тбилиси • Инста-тур",
+    subtitle: "Грузия • 4 дня • Уютные дворики",
+    tag: "Хит недели",
+    image: "https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=800&q=80"
   },
-  { 
-    id: 3, 
-    destinationKey: 'turkey',
-    title: "Чиловый пляж", 
-    subtitle: "Анталья • Всё включено • Релакс", 
-    tag: "Топ выбор 🏖️", 
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" 
+  {
+    id: 3, destinationKey: "turkey",
+    title: "Чиловый пляж",
+    subtitle: "Анталья • Всё включено • Релакс",
+    tag: "Топ выбор 🏖️",
+    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
   },
-  { 
-    id: 4, 
-    destinationKey: 'altai',
-    title: "Горный перезагруз", 
-    subtitle: "Алтай • Трекинг и баня", 
-    tag: "Природа 🏔️", 
-    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80" 
+  {
+    id: 4, destinationKey: "altai",
+    title: "Горный перезагруз",
+    subtitle: "Алтай • Трекинг и баня",
+    tag: "Природа 🏔️",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80"
   },
-  { 
-    id: 5, 
-    destinationKey: 'dubai',
-    title: "Дубайский шик", 
-    subtitle: "ОАЭ • 5 дней • Небоскребы и шопинг", 
-    tag: "Люкс ✨", 
-    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80" 
+  {
+    id: 5, destinationKey: "dubai",
+    title: "Дубайский шик",
+    subtitle: "ОАЭ • 5 дней • Небоскрёбы и шопинг",
+    tag: "Люкс ✨",
+    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80"
   },
-  { 
-    id: 6, 
-    destinationKey: 'bali',
-    title: "Балийский релакс", 
-    subtitle: "Индонезия • 10 дней • Виллы и джунгли", 
-    tag: "Экзотика 🌴", 
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80" 
+  {
+    id: 6, destinationKey: "bali",
+    title: "Балийский релакс",
+    subtitle: "Индонезия • 10 дней • Виллы и джунгли",
+    tag: "Экзотика 🌴",
+    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80"
   }
 ];
 
 const destinationDatabase = {
   japan: {
-    country: 'Япония',
-    city: 'Токио & Киото',
-    flight: 'Москва (SVO) ➔ Токио (HND / Ханеда)',
-    flightDate: '12 ноя, 19:20 (прямой рейс)',
+    country: "Япония", city: "Токио и Киото",
+    flight: "Москва (SVO) → Токио (HND)",
+    flightDate: "Пример маршрута • даты уточняются",
     hotels: [
-      { id: 'jp1', name: 'Aman Tokyo 5★', stars: '5★ Luxury', rating: '9.8', tags: 'Центр Токио • Спа • Панорама', price: 240000, reason: 'Эксклюзивный сервис и виды на Фудзи.', risk: 'Нужна виза Японии.' },
-      { id: 'jp2', name: 'Hotel Gracery Shinjuku 4★', stars: '4★', rating: '9.1', tags: 'Синдзюку • Центр жизни', price: 135000, reason: 'Идеально для исследования ночного Токио.', risk: 'Компактные номера.' }
+      {
+        id: "jp1", name: "Aman Tokyo", stars: "5★ Luxury",
+        rating: "9.8", tags: "Центр Токио • Спа • Панорама",
+        price: 240000, reason: "Роскошный отдых и панорамные виды.",
+        risk: "Стоимость и доступность нужно уточнить."
+      },
+      {
+        id: "jp2", name: "Hotel Gracery Shinjuku", stars: "4★",
+        rating: "9.1", tags: "Синдзюку • Рядом с развлечениями",
+        price: 135000, reason: "Удобная база для знакомства с Токио.",
+        risk: "Номера могут быть компактными."
+      }
     ]
   },
   georgia: {
-    country: 'Грузия',
-    city: 'Тбилиси',
-    flight: 'Москва (VKO) ➔ Тбилиси (TBS)',
-    flightDate: '15 ноя, 11:30',
+    country: "Грузия", city: "Тбилиси",
+    flight: "Москва → Тбилиси",
+    flightDate: "Пример маршрута • даты уточняются",
     hotels: [
-      { id: 'ge1', name: 'Stamba Hotel Tbilisi 5★', stars: '5★ Design', rating: '9.7', tags: 'Дизайн • Атриум • Винный бар', price: 78000, reason: 'Самый стильный отель столицы.', risk: 'Высокий спрос в ресторанах.' },
-      { id: 'ge2', name: 'Rooms Hotel Tbilisi 4★', stars: '4★', rating: '9.3', tags: 'Район Вере • Веранда', price: 54000, reason: 'Богемная и уютная атмосфера.', risk: 'До старого города 15 минут пешком.' }
-    ]
-  },
-  altai: {
-    country: 'Россия',
-    city: 'Алтай',
-    flight: 'Москва (SVO) ➔ Горно-Алтайск (RGK)',
-    flightDate: '20 ноя, 00:40',
-    hotels: [
-      { id: 'al1', name: 'Altay Village Teletskoe 5★', stars: '5★ Эко', rating: '9.9', tags: 'Телецкое озеро • Шале', price: 160000, reason: 'Премиум-отдых в дикой тайге.', risk: 'Трансфер 2.5 часа от аэропорта.' }
+      {
+        id: "ge1", name: "Stamba Hotel", stars: "5★",
+        rating: "9.7", tags: "Дизайн • Атриум • Ресторан",
+        price: 78000, reason: "Стильный отель с выразительным интерьером.",
+        risk: "Условия и стоимость нужно уточнить."
+      },
+      {
+        id: "ge2", name: "Rooms Hotel Tbilisi", stars: "4★",
+        rating: "9.3", tags: "Район Вере • Уютная атмосфера",
+        price: 54000, reason: "Подойдёт для неспешного городского отдыха.",
+        risk: "Уточни расположение и доступность."
+      }
     ]
   },
   turkey: {
-    country: 'Турция',
-    city: 'Анталья',
-    flight: 'Москва (VKO) ➔ Анталья (AYT)',
-    flightDate: '10 ноя, 06:05',
+    country: "Турция", city: "Анталья",
+    flight: "Москва → Анталья",
+    flightDate: "Пример маршрута • даты уточняются",
     hotels: [
-      { id: 'tr1', name: 'Sunrise Garden Resort & Spa 5★', stars: '5★ All Inc', rating: '9.4', tags: 'Первая линия • Бассейн', price: 84500, reason: 'Отлично для семей с детьми.', risk: 'Трансфер 45 минут.' },
-      { id: 'tr2', name: 'Blue Wave Boutique Hotel 4★', stars: '4★', rating: '8.8', tags: 'Вторая линия • Уютно', price: 67600, reason: 'Экономия 20% бюджета.', risk: 'До пляжа 7 минут пешком.' }
+      {
+        id: "tr1", name: "Отель на первой линии",
+        stars: "5★", rating: "—",
+        tags: "Пляж • Бассейн • Отдых",
+        price: 84500, reason: "Пример пляжного отдыха с комфортом.",
+        risk: "Название и условия необходимо проверить."
+      },
+      {
+        id: "tr2", name: "Бутик-отель у моря",
+        stars: "4★", rating: "—",
+        tags: "Море • Уют • Прогулки",
+        price: 67600, reason: "Пример более бюджетного варианта.",
+        risk: "Это демонстрационный вариант."
+      }
+    ]
+  },
+  altai: {
+    country: "Россия", city: "Алтай",
+    flight: "Москва → Горно-Алтайск",
+    flightDate: "Пример маршрута • даты уточняются",
+    hotels: [
+      {
+        id: "al1", name: "Загородный эко-отель на Алтае",
+        stars: "5★", rating: "—",
+        tags: "Горы • Природа • Отдых",
+        price: 160000, reason: "Для отдыха среди красивых пейзажей.",
+        risk: "Это демонстрационный вариант."
+      }
     ]
   },
   dubai: {
-    country: 'ОАЭ',
-    city: 'Дубай',
-    flight: 'Москва (VKO) ➔ Дубай (DXB)',
-    flightDate: '01 дек, 14:10',
+    country: "ОАЭ", city: "Дубай",
+    flight: "Москва → Дубай",
+    flightDate: "Пример маршрута • даты уточняются",
     hotels: [
-      { id: 'db1', name: 'Burj Al Arab Jumeirah 7★', stars: '7★ VIP', rating: '9.9', tags: 'Парус • Частный пляж • Личный батлер', price: 420000, reason: 'Максимальный уровень роскоши и статуса.', risk: 'Высокая стоимость.' },
-      { id: 'db2', name: 'Rove Downtown 3★', stars: '3★', rating: '8.9', tags: 'Рядом с Burj Khalifa • Бассейн', price: 62000, reason: 'Отличное расположение по доступной цене.', risk: 'Компактные комнаты.' }
+      {
+        id: "db1", name: "Burj Al Arab Jumeirah",
+        stars: "Luxury", rating: "—",
+        tags: "Роскошь • Море • Сервис",
+        price: 420000, reason: "Пример премиального размещения.",
+        risk: "Цена и доступность требуют проверки."
+      },
+      {
+        id: "db2", name: "Rove Downtown",
+        stars: "3★", rating: "—",
+        tags: "Город • Удобное расположение",
+        price: 62000, reason: "Пример более доступного городского отдыха.",
+        risk: "Цена и наличие не проверены."
+      }
     ]
   },
   bali: {
-    country: 'Индонезия',
-    city: 'Бали (Убуд & Семиньяк)',
-    flight: 'Москва (SVO) ➔ Денпасар (DPS)',
-    flightDate: '10 янв, 21:00',
+    country: "Индонезия", city: "Бали",
+    flight: "Москва → Денпасар",
+    flightDate: "Пример маршрута • даты уточняются",
     hotels: [
-      { id: 'bl1', name: 'Capella Ubud 5★', stars: '5★ Luxury Camp', rating: '9.8', tags: 'Джунгли • Частный бассейн • Спа', price: 210000, reason: 'Уникальные роскошные виллы среди нетронутой природы.', risk: 'Влажный тропический климат.' }
+      {
+        id: "bl1", name: "Capella Ubud",
+        stars: "5★", rating: "—",
+        tags: "Джунгли • Виллы • Спа",
+        price: 210000, reason: "Идея для уединённого отдыха на природе.",
+        risk: "Цена и доступность требуют проверки."
+      }
     ]
   }
 };
 
+const palette = {
+  page: "#141827",
+  header: "#191E30",
+  card: "#22283B",
+  inset: "#191F31",
+  border: "#363D55",
+  accent: "#B8B9F5",
+  accentHover: "#999BEA",
+  gold: "#E8D4A2",
+  muted: "#AAB2C5"
+};
+
+const formatPrice = (value) =>
+  `${Math.max(0, Number(value) || 0).toLocaleString("ru-RU")} ₽`;
+
+const normaliseHotel = (hotel, index) => ({
+  id: String(hotel.id || `ai-hotel-${index + 1}`),
+  name: String(hotel.name || "Вариант размещения"),
+  stars: String(hotel.stars ?? "—"),
+  rating: hotel.rating ?? "—",
+  tags: Array.isArray(hotel.tags)
+    ? hotel.tags.join(" • ")
+    : String(hotel.tags || "Подробности уточняются"),
+  price: Math.max(0, Number(hotel.price) || 0),
+  reason: String(hotel.reason || "Вариант для рассмотрения."),
+  risk: String(
+    hotel.risk || "Уточни актуальные цены и условия размещения."
+  )
+});
+
 export default function App() {
   const [chats, setChats] = useState([
-    { 
-      id: 1, 
-      title: 'Япония • Маршрут зумеров', 
-      destinationKey: 'japan',
-      messages: [{ sender: 'ai', text: 'Привет! Я AI-агент Островка. План поездки в Японию готов. Выберите отель справа или напишите пожелания.' }],
+    {
+      id: 1,
+      title: "Япония • Маршрут зумеров",
+      destinationKey: "japan",
+      trip: null,
+      messages: [{
+        sender: "ai",
+        text: "Привет! Я AI-агент Островка. План поездки в Японию готов. Выбери отель справа или расскажи, что хочешь изменить."
+      }],
       selectedHotel: destinationDatabase.japan.hotels[0],
       hasPet: false
     }
   ]);
-  
+
   const [activeChatId, setActiveChatId] = useState(1);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [inputQuery, setInputQuery] = useState('');
+  const [inputQuery, setInputQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showVoucher, setShowVoucher] = useState(false);
   const [showMetricsModal, setShowMetricsModal] = useState(false);
-  const [postActionNotice, setPostActionNotice] = useState('');
+  const [postActionNotice, setPostActionNotice] = useState("");
 
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
-  const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
-  const currentDestination = destinationDatabase[activeChat.destinationKey] || destinationDatabase.japan;
+  const activeChat = chats.find(chat => chat.id === activeChatId) || chats[0];
+  const baseDestination =
+    destinationDatabase[activeChat.destinationKey] || destinationDatabase.japan;
 
-  // Автопрокрутка чата вниз
+  const currentDestination = activeChat.trip
+    ? {
+        ...baseDestination,
+        ...activeChat.trip,
+        hotels: Array.isArray(activeChat.trip.hotels)
+          ? activeChat.trip.hotels.map(normaliseHotel)
+          : baseDestination.hotels
+      }
+    : baseDestination;
+
+  const hotelList = currentDestination.hotels || [];
+  const selectedHotel =
+    hotelList.find(hotel => hotel.id === activeChat.selectedHotel?.id) ||
+    hotelList[0] ||
+    null;
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeChat.messages, loading]);
 
-  // Автопрокрутка ленты карточек на главной (каждые 3 секунды)
   useEffect(() => {
     if (isChatOpen) return;
+
     const interval = setInterval(() => {
-      if (scrollContainerRef.current) {
-        const container = scrollContainerRef.current;
-        const maxScroll = container.scrollWidth - container.clientWidth;
-        if (container.scrollLeft >= maxScroll - 10) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          container.scrollBy({ left: 300, behavior: 'smooth' });
-        }
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft >= maxScroll - 10) {
+        container.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        container.scrollBy({ left: 300, behavior: "smooth" });
       }
-    }, 3000);
+    }, 4000);
+
     return () => clearInterval(interval);
   }, [isChatOpen]);
 
   useEffect(() => {
-    const handlePopState = () => {
-      if (isChatOpen) setIsChatOpen(false);
-    };
-    if (isChatOpen) window.history.pushState({ chatOpen: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    const handlePopState = () => setIsChatOpen(false);
+    if (isChatOpen) window.history.pushState({ chatOpen: true }, "");
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, [isChatOpen]);
+
+  const openChat = (chatId) => {
+    setActiveChatId(chatId);
+    setIsChatOpen(true);
+    setIsSidebarOpen(false);
+    setShowVoucher(false);
+  };
 
   const selectPresetChat = (destKey) => {
     const dest = destinationDatabase[destKey] || destinationDatabase.japan;
-    let targetChat = chats.find(c => c.destinationKey === destKey);
-    
+    let targetChat = chats.find(chat => chat.destinationKey === destKey);
+
     if (!targetChat) {
-      const newId = Date.now();
       targetChat = {
-        id: newId,
+        id: Date.now(),
         title: `${dest.country} • Тур`,
         destinationKey: destKey,
-        messages: [{ sender: 'ai', text: `Создан новый тур в направлении: ${dest.country} (${dest.city}). Вся логистика и отели уже построены справа!` }],
-        selectedHotel: dest.hotels[0],
+        trip: null,
+        messages: [{
+          sender: "ai",
+          text: `Открыт пример маршрута: ${dest.country}, ${dest.city}. Можешь задать вопрос или изменить план поездки.`
+        }],
+        selectedHotel: dest.hotels[0] || null,
         hasPet: false
       };
       setChats(prev => [targetChat, ...prev]);
     }
 
-    setActiveChatId(targetChat.id);
-    setIsChatOpen(true);
-    setIsSidebarOpen(false);
-    window.history.pushState({ chatOpen: true }, '');
-  };
-
-  const createBrandNewChat = () => {
-    const newId = Date.now();
-    const newChatObj = {
-      id: newId,
-      title: 'Новый диалог с агентом',
-      destinationKey: 'turkey',
-      messages: [{ sender: 'ai', text: 'Привет! Куда бы вы хотели отправиться? Расскажите о своих планах.' }],
-      selectedHotel: destinationDatabase.turkey.hotels[0],
-      hasPet: false
-    };
-    setChats(prev => [newChatObj, ...prev]);
-    setActiveChatId(newId);
-    setIsChatOpen(true);
-    setIsSidebarOpen(false);
-    window.history.pushState({ chatOpen: true }, '');
+    openChat(targetChat.id);
   };
   
-const handleSend = async (textToSend) => {
-  const query = (textToSend || inputQuery).trim();
+  const handleSend = async (
+    textToSend,
+    targetChatId = activeChatId,
+    historyOverride = null
+  ) => {
+    const query = String(textToSend ?? inputQuery).trim();
+    if (!query || loading) return;
 
-  if (!query || loading) return;
+    const targetChat =
+      chats.find(chat => chat.id === targetChatId) || activeChat;
 
-  const chatId = activeChatId;
+    const history = historyOverride || targetChat.messages;
 
-  setInputQuery('');
-
-  setChats(prevChats =>
-    prevChats.map(chat =>
-      chat.id === chatId
+    setInputQuery("");
+    setChats(prev => prev.map(chat =>
+      chat.id === targetChatId
         ? {
             ...chat,
-            messages: [
-              ...chat.messages,
-              { sender: 'user', text: query }
-            ]
+            messages: [...chat.messages, { sender: "user", text: query }]
           }
         : chat
-    )
-  );
+    ));
+    setLoading(true);
 
-  setLoading(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: query,
+          history: history.map(item => ({
+            sender: item.sender,
+            text: item.text
+          })),
+          currentTrip: targetChat.trip || {
+            country: destinationDatabase[targetChat.destinationKey]?.country,
+            city: destinationDatabase[targetChat.destinationKey]?.city
+          }
+        })
+      });
 
-  try {
-    const response = await fetch(
-      'https://ostrovok-ai.onrender.com/api/chat',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message: query })
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Не удалось получить ответ от ИИ.");
       }
-    );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || 'Не удалось получить ответ от ИИ.'
-      );
-    }
-
-    setChats(prevChats =>
-      prevChats.map(chat =>
-        chat.id === chatId
+      const newTrip =
+        data.trip && typeof data.trip === "object"
           ? {
-              ...chat,
-              title:
-                chat.title === 'Новый диалог с агентом'
-                  ? query.slice(0, 32)
-                  : chat.title,
-              messages: [
-                ...chat.messages,
-                { sender: 'ai', text: data.answer }
-              ]
+              ...data.trip,
+              hotels: Array.isArray(data.trip.hotels)
+                ? data.trip.hotels.map(normaliseHotel)
+                : []
             }
-          : chat
-      )
-    );
-  } catch (error) {
-    setChats(prevChats =>
-      prevChats.map(chat =>
-        chat.id === chatId
+          : null;
+
+      setChats(prev => prev.map(chat => {
+        if (chat.id !== targetChatId) return chat;
+
+        const updatedTrip = newTrip || chat.trip;
+        const updatedHotels = updatedTrip?.hotels || [];
+        const previousHotelId = chat.selectedHotel?.id;
+        const nextHotel =
+          updatedHotels.find(hotel => hotel.id === previousHotelId) ||
+          updatedHotels[0] ||
+          chat.selectedHotel ||
+          destinationDatabase[chat.destinationKey]?.hotels?.[0] ||
+          null;
+
+        const firstUserRequest = chat.title === "Новый диалог с агентом";
+
+        return {
+          ...chat,
+          title: firstUserRequest ? query.slice(0, 32) : chat.title,
+          trip: updatedTrip,
+          selectedHotel: nextHotel,
+          messages: [
+            ...chat.messages,
+            {
+              sender: "ai",
+              text: typeof data.answer === "string"
+                ? data.answer
+                : "Давай уточним детали твоей поездки."
+            }
+          ]
+        };
+      }));
+    } catch (error) {
+      setChats(prev => prev.map(chat =>
+        chat.id === targetChatId
           ? {
               ...chat,
               messages: [
                 ...chat.messages,
                 {
-                  sender: 'ai',
-                  text:
-                    'Не удалось связаться с ИИ. ' +
-                    'Попробуйте ещё раз через несколько секунд. ' +
-                    (error.message || '')
+                  sender: "ai",
+                  text: `Не удалось связаться с ИИ. ${error.message || "Попробуй ещё раз."}`
                 }
               ]
             }
           : chat
-      )
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      ));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createBrandNewChat = (initialQuery = "") => {
+    if (loading) return;
+
+    const newId = Date.now();
+    const query = initialQuery.trim();
+
+    const newChat = {
+      id: newId,
+      title: query ? query.slice(0, 32) : "Новый диалог с агентом",
+      destinationKey: "japan",
+      trip: null,
+      messages: query
+        ? []
+        : [{
+            sender: "ai",
+            text: "Привет! Куда хочешь отправиться? Расскажи о направлении, датах и бюджете."
+          }],
+      selectedHotel: destinationDatabase.japan.hotels[0],
+      hasPet: false
+    };
+
+    setChats(prev => [newChat, ...prev]);
+    setActiveChatId(newId);
+    setIsChatOpen(true);
+    setIsSidebarOpen(false);
+    setShowVoucher(false);
+
+    if (query) {
+      handleSend(query, newId, []);
+    }
+  };
 
   const updateSelectedHotel = (hotel) => {
-    setChats(prevChats => prevChats.map(chat => {
-      if (chat.id === activeChatId) return { ...chat, selectedHotel: hotel };
-      return chat;
-    }));
+    setChats(prev => prev.map(chat =>
+      chat.id === activeChatId
+        ? { ...chat, selectedHotel: hotel }
+        : chat
+    ));
   };
 
   const togglePet = () => {
-    setChats(prevChats => prevChats.map(chat => {
-      if (chat.id === activeChatId) return { ...chat, hasPet: !chat.hasPet };
-      return chat;
-    }));
+    const nextValue = !activeChat.hasPet;
+
+    setChats(prev => prev.map(chat =>
+      chat.id === activeChatId
+        ? { ...chat, hasPet: nextValue }
+        : chat
+    ));
+
+    handleSend(
+      nextValue
+        ? "Я путешествую с питомцем. Учти это в маршруте и предложениях по размещению."
+        : "Я больше не путешествую с питомцем. Обнови рекомендации.",
+      activeChatId
+    );
   };
+
+  const sendCheaperRequest = () => {
+    handleSend(
+      "Предложи более бюджетные варианты поездки и отелей. Постарайся сократить общий бюджет примерно на 20%, сохранив направление.",
+      activeChatId
+    );
+  };
+
+  const goHome = () => {
+    setIsChatOpen(false);
+    setIsSidebarOpen(false);
+    setShowVoucher(false);
+  };
+
   return (
-    <div 
-      className="w-full text-slate-100 flex flex-col font-sans selection:bg-[#06B6D4] selection:text-white"
+    <div
+      className="min-h-screen w-full flex flex-col font-sans text-slate-100 selection:bg-indigo-300 selection:text-slate-900"
       style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1A102F 0%, #251440 50%, #110A20 100%)'
+        background: "linear-gradient(135deg, #141827 0%, #20233A 52%, #141827 100%)"
       }}
     >
-      
-      {/* Боковая шторка истории */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex">
-          <div className="w-80 bg-[#1A102F] border-r border-[#3B256B] p-5 flex flex-col justify-between shadow-2xl">
+        <div className="fixed inset-0 z-50 flex bg-black/65 backdrop-blur-sm">
+          <aside
+            className="w-80 max-w-[85vw] p-5 flex flex-col justify-between shadow-2xl border-r"
+            style={{ background: palette.header, borderColor: palette.border }}
+          >
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#3B256B]">
-                <span className="font-extrabold text-xs text-[#06B6D4] tracking-wider">ИСТОРИЯ ЧАТОВ</span>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-white p-1">
-                  <X className="w-5 h-5" />
+              <div
+                className="flex items-center justify-between pb-3 border-b"
+                style={{ borderColor: palette.border }}
+              >
+                <span
+                  className="text-xs font-extrabold tracking-wider"
+                  style={{ color: palette.accent }}
+                >
+                  ИСТОРИЯ ЧАТОВ
+                </span>
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1 text-slate-400 hover:text-white"
+                  aria-label="Закрыть историю"
+                >
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <button 
-                onClick={createBrandNewChat}
-                className="w-full bg-[#06B6D4]/20 hover:bg-[#06B6D4]/30 border border-[#06B6D4]/40 text-[#06B6D4] text-xs font-bold py-3 rounded-xl flex items-center justify-center space-x-2 transition"
+              <button
+                onClick={() => createBrandNewChat()}
+                className="w-full rounded-xl border py-3 text-xs font-bold flex items-center justify-center gap-2 transition hover:brightness-110"
+                style={{
+                  background: "#292E48",
+                  borderColor: palette.border,
+                  color: palette.accent
+                }}
               >
-                <Plus className="w-4 h-4 text-[#06B6D4]" />
-                <span>Новый чистый чат</span>
+                <Plus className="h-4 w-4" />
+                Новый чат
               </button>
 
-              <div className="space-y-2 pt-2 overflow-y-auto max-h-[60vh] no-scrollbar">
+              <div className="max-h-[60vh] space-y-2 overflow-y-auto">
                 {chats.map(chat => (
-                  <div 
+                  <button
                     key={chat.id}
-                    onClick={() => { setActiveChatId(chat.id); setIsChatOpen(true); setIsSidebarOpen(false); }}
-                    className={`p-3 rounded-xl text-xs cursor-pointer flex items-center space-x-3 transition ${
-                      activeChatId === chat.id ? 'bg-[#2C1E4A] border border-[#06B6D4] text-white font-semibold shadow-md' : 'bg-[#150D24] hover:bg-[#201335] text-slate-300'
-                    }`}
+                    onClick={() => openChat(chat.id)}
+                    className="w-full rounded-xl p-3 text-left text-xs flex items-center gap-3 transition"
+                    style={{
+                      background: activeChatId === chat.id ? "#303651" : palette.inset,
+                      border: `1px solid ${activeChatId === chat.id ? palette.accent : palette.border}`,
+                      color: "#F1F3F9"
+                    }}
                   >
-                    <MessageSquare className="w-4 h-4 text-[#06B6D4] shrink-0" />
-                    <div className="truncate">
-                      <div className="truncate">{chat.title}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">ID: #{chat.id.toString().slice(-4)}</div>
-                    </div>
-                  </div>
+                    <MessageSquare
+                      className="h-4 w-4 shrink-0"
+                      style={{ color: palette.accent }}
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{chat.title}</span>
+                      <span className="mt-1 block text-[10px] text-slate-400">
+                        Диалог #{String(chat.id).slice(-4)}
+                      </span>
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 text-center pt-4 border-t border-[#3B256B]">
-              Каждый тур изолирован в своем чате
-            </div>
-          </div>
-          <div className="flex-1" onClick={() => setIsSidebarOpen(false)}></div>
+            <p className="border-t pt-4 text-center text-[11px] text-slate-400" style={{ borderColor: palette.border }}>
+              История диалогов в рамках текущего сеанса
+            </p>
+          </aside>
+          <button
+            className="flex-1"
+            aria-label="Закрыть меню"
+            onClick={() => setIsSidebarOpen(false)}
+          />
         </div>
       )}
 
-      {/* Шапка */}
-      <header className="border-b border-[#3B256B] bg-[#1A102F]/95 backdrop-blur-md sticky top-0 z-40 px-4 md:px-6 py-3.5 flex items-center justify-between shadow-lg">
-        <div className="flex items-center space-x-3">
-          <button 
+      <header
+        className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b px-4 py-3.5 shadow-lg backdrop-blur-md md:px-6"
+        style={{
+          background: "rgba(25, 30, 48, 0.96)",
+          borderColor: palette.border
+        }}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-xl bg-[#2C1E4A] hover:bg-[#3B256B] border border-[#3B256B] text-[#06B6D4] transition"
+            className="rounded-xl border p-2 transition hover:brightness-125"
+            style={{
+              background: palette.card,
+              borderColor: palette.border,
+              color: palette.accent
+            }}
+            aria-label="Открыть историю чатов"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="h-5 w-5" />
           </button>
-          
-          <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => setIsChatOpen(false)}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#06B6D4] to-[#F59E0B] flex items-center justify-center shadow-lg shadow-[#06B6D4]/20">
-              <Sparkles className="w-4 h-4 text-slate-950" />
-            </div>
-            <div>
-              <span className="text-lg font-black tracking-wider bg-gradient-to-r from-[#06B6D4] via-[#FDE047] to-[#F59E0B] bg-clip-text text-transparent">Островок</span>
-              <span className="text-[10px] block text-[#06B6D4] font-semibold">AI Travel Agent</span>
-            </div>
-          </div>
+
+          <button
+            className="flex min-w-0 items-center gap-2.5 text-left"
+            onClick={goHome}
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-lg"
+              style={{ background: "linear-gradient(135deg, #B8B9F5, #E8D4A2)" }}
+            >
+              <Sparkles className="h-4 w-4 text-slate-900" />
+            </span>
+            <span>
+              <span className="block bg-gradient-to-r from-[#06B6D4] via-[#FDE047] to-[#F59E0B] bg-clip-text text-lg font-black tracking-wide text-transparent">
+                Островок
+              </span>
+              <span className="block text-[10px] font-semibold" style={{ color: palette.accent }}>
+                AI Travel Agent
+              </span>
+            </span>
+          </button>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <button 
+        <div className="flex items-center gap-2">
+          <button
             onClick={() => setShowMetricsModal(true)}
-            className="text-xs bg-[#F59E0B]/15 border border-[#F59E0B]/40 hover:bg-[#F59E0B]/25 px-3 py-2 rounded-xl transition flex items-center space-x-1.5 text-[#FDE047] shadow-md"
+            className="flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs transition hover:brightness-110 sm:px-3"
+            style={{
+              background: palette.card,
+              borderColor: palette.border,
+              color: palette.gold
+            }}
           >
-            <Activity className="w-4 h-4 text-[#F59E0B]" />
-            <span className="font-bold">Метрики Агента</span>
+            <Activity className="h-4 w-4" />
+            <span className="hidden font-bold sm:inline">Метрики агента</span>
+            <span className="font-bold sm:hidden">Метрики</span>
           </button>
 
           {isChatOpen && (
-            <button 
-              onClick={() => setIsChatOpen(false)}
-              className="text-xs font-bold bg-[#2C1E4A] border border-[#3B256B] hover:bg-[#3B256B] px-4 py-2 rounded-xl transition text-slate-200 hidden sm:block shadow-md"
+            <button
+              onClick={goHome}
+              className="hidden rounded-xl border px-3 py-2 text-xs font-bold transition hover:brightness-125 sm:block"
+              style={{
+                background: palette.card,
+                borderColor: palette.border,
+                color: "#E4E7F1"
+              }}
             >
               На главную
             </button>
@@ -411,336 +637,581 @@ const handleSend = async (textToSend) => {
         </div>
       </header>
 
-      {/* Главный экран или Интерфейс чата */}
       {!isChatOpen ? (
-        <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-6xl mx-auto w-full">
-          <div className="text-center mb-8 space-y-3">
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight text-white">
-              Куда отправимся в этот раз? <br/>
-              <span className="bg-gradient-to-r from-[#06B6D4] via-[#FDE047] to-[#F59E0B] bg-clip-text text-transparent">Умный AI устроит всю поездку.</span>
+        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-4 py-8">
+          <div className="mb-7 space-y-3 text-center">
+            <h1 className="text-3xl font-black leading-tight tracking-tight text-white md:text-5xl">
+              Куда отправимся в этот раз?
+              <br />
+              <span className="bg-gradient-to-r from-[#06B6D4] via-[#FDE047] to-[#F59E0B] bg-clip-text text-transparent">
+                Умный AI устроит всю поездку.
+              </span>
             </h1>
-            <p className="text-slate-300 text-sm md:text-base max-w-xl mx-auto font-medium">
-              Выберите карточку для старта чата или напишите свой маршрут.
+            <p className="mx-auto max-w-xl text-sm font-medium text-slate-300 md:text-base">
+              Выбери готовый пример или напиши, куда хочешь отправиться.
             </p>
           </div>
 
-          {/* Автоматическая карусель карточек */}
-          <div 
+          <div
             ref={scrollContainerRef}
-            className="w-full overflow-x-auto py-6 mb-4 no-scrollbar scroll-smooth"
+            className="no-scrollbar mb-4 w-full overflow-x-auto scroll-smooth py-5"
           >
-            <div className="flex space-x-5 w-max mx-auto px-4">
-              {presetCards.map((card) => (
-                <div 
+            <div className="mx-auto flex w-max gap-4 px-4">
+              {presetCards.map(card => (
+                <button
                   key={card.id}
                   onClick={() => selectPresetChat(card.destinationKey)}
-                  className="w-72 h-48 rounded-2xl border border-[#3B256B] p-5 flex flex-col justify-between cursor-pointer hover:scale-105 hover:border-[#06B6D4] transition-all duration-300 relative overflow-hidden group bg-[#2C1E4A] shadow-2xl"
+                  className="group relative flex h-48 w-72 flex-col justify-between overflow-hidden rounded-2xl border p-5 text-left shadow-xl transition duration-300 hover:scale-[1.025]"
+                  style={{ background: palette.card, borderColor: palette.border }}
                 >
-                  <img 
-                    src={card.image} 
-                    alt={card.title} 
+                  <img
+                    src={card.image}
+                    alt={card.title}
                     loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-500 opacity-60"
+                    className="absolute inset-0 h-full w-full object-cover opacity-55 transition duration-500 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A102F] via-[#1A102F]/70 to-transparent"></div>
-
-                  <div className="relative z-10">
-                    <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-[#1A102F]/90 border border-[#F59E0B]/60 text-[#FDE047] backdrop-blur-md shadow-lg">
+                  <span className="absolute inset-0 bg-gradient-to-t from-[#141827] via-[#141827]/70 to-transparent" />
+                  <span className="relative z-10">
+                    <span
+                      className="rounded-full border px-3 py-1 text-xs font-extrabold backdrop-blur-sm"
+                      style={{
+                        background: "rgba(25, 30, 48, 0.85)",
+                        borderColor: "#B7A987",
+                        color: palette.gold
+                      }}
+                    >
                       {card.tag}
                     </span>
-                  </div>
-                  <div className="relative z-10">
-                    <h3 className="text-lg font-bold text-white group-hover:text-[#06B6D4] transition">{card.title}</h3>
-                    <p className="text-xs text-slate-200 mt-0.5 font-medium">{card.subtitle}</p>
-                  </div>
-                </div>
+                  </span>
+                  <span className="relative z-10">
+                    <span className="block text-lg font-bold text-white transition group-hover:text-indigo-200">
+                      {card.title}
+                    </span>
+                    <span className="mt-1 block text-xs font-medium text-slate-200">
+                      {card.subtitle}
+                    </span>
+                  </span>
+                </button>
               ))}
             </div>
           </div>
 
-          <div className="w-full max-w-2xl relative mt-4">
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#06B6D4] via-[#F59E0B] to-[#9333EA] rounded-2xl blur-lg opacity-40"></div>
-            <div className="relative bg-[#2C1E4A] border border-[#3B256B] rounded-2xl p-2.5 flex items-center shadow-2xl">
-              <input 
+          <form
+            className="relative mt-4 w-full max-w-2xl"
+            onSubmit={event => {
+              event.preventDefault();
+              createBrandNewChat(inputQuery);
+            }}
+          >
+            <div
+              className="absolute -inset-1 rounded-2xl opacity-25 blur-lg"
+              style={{ background: "linear-gradient(90deg, #B8B9F5, #E8D4A2, #818CF8)" }}
+            />
+            <div
+              className="relative flex items-center rounded-2xl border p-2.5 shadow-2xl"
+              style={{ background: palette.card, borderColor: palette.border }}
+            >
+              <input
                 type="text"
                 value={inputQuery}
-                onChange={(e) => setInputQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && createBrandNewChat()}
-                placeholder="Например: хочу в Токио или Дубай на неделю..."
-                className="w-full bg-transparent px-4 py-3 text-white placeholder-slate-400 text-sm md:text-base focus:outline-none"
+                onChange={event => setInputQuery(event.target.value)}
+                placeholder="Например: хочу в Сеул на неделю..."
+                className="w-full bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-slate-400 md:text-base"
               />
-              <button 
-                onClick={createBrandNewChat}
-                className="bg-gradient-to-r from-[#06B6D4] to-[#F59E0B] hover:opacity-90 text-slate-950 font-black p-3.5 rounded-xl transition shadow-lg flex items-center justify-center shrink-0"
+              <button
+                type="submit"
+                disabled={loading}
+                className="shrink-0 rounded-xl p-3.5 font-black text-slate-900 shadow-md transition hover:brightness-110 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, #B8B9F5, #E8D4A2)" }}
+                aria-label="Начать планирование"
               >
-                <ArrowRight className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+                <ArrowRight className="h-5 w-5 stroke-[2.5]" />
               </button>
             </div>
-          </div>
+          </form>
         </main>
       ) : (
-      <main className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 md:p-6 overflow-hidden">
-          
-          {/* Чат */}
-          <div className="lg:col-span-7 bg-[#2C1E4A] border border-[#3B256B] rounded-2xl flex flex-col h-[calc(100vh-140px)] overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#3B256B] bg-[#1A102F] flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-[#06B6D4] animate-pulse"></div>
-                <span className="font-bold text-sm text-white">AI Консьерж ({currentDestination.country})</span>
+        <main className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-5 overflow-hidden p-4 md:p-6 lg:grid-cols-12">
+          <section
+            className="flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-2xl border shadow-xl lg:col-span-7"
+            style={{ background: palette.card, borderColor: palette.border }}
+          >
+            <div
+              className="flex items-center justify-between gap-2 border-b p-4"
+              style={{ background: palette.header, borderColor: palette.border }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 animate-pulse rounded-full"
+                  style={{ background: palette.accent }}
+                />
+                <span className="text-sm font-bold text-white">
+                  AI-консьерж ({currentDestination.country})
+                </span>
               </div>
-              <span className="text-xs text-[#FDE047] bg-[#F59E0B]/20 border border-[#F59E0B]/40 px-2.5 py-0.5 rounded-full font-medium">
-                Чат #{activeChatId.toString().slice(-4)}
+              <span
+                className="rounded-full border px-2.5 py-1 text-xs font-medium"
+                style={{
+                  background: "#302F43",
+                  borderColor: palette.border,
+                  color: palette.gold
+                }}
+              >
+                Чат #{String(activeChatId).slice(-4)}
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {activeChat.messages.map((m, idx) => (
-                <div key={idx} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    m.sender === 'user' 
-                      ? 'bg-gradient-to-r from-[#06B6D4] to-[#3B82F6] text-slate-950 font-bold rounded-br-none shadow-lg' 
-                      : 'bg-[#150D24] border border-[#3B256B] text-slate-100 rounded-bl-none shadow-md'
-                  }`}>
-                    {m.text}
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              {activeChat.messages.map((message, index) => (
+                <div
+                  key={`${activeChatId}-${index}`}
+                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      message.sender === "user"
+                        ? "rounded-br-sm font-medium text-slate-900"
+                        : "rounded-bl-sm border text-slate-100"
+                    }`}
+                    style={
+                      message.sender === "user"
+                        ? { background: "linear-gradient(135deg, #B8B9F5, #D7D8F8)" }
+                        : { background: palette.inset, borderColor: palette.border }
+                    }
+                  >
+                    {message.text}
                   </div>
                 </div>
               ))}
+
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#150D24] border border-[#3B256B] rounded-2xl px-4 py-3 text-sm text-[#06B6D4] flex items-center space-x-2">
-                    <RefreshCw className="w-4 h-4 animate-spin text-[#F59E0B]" />
-                    <span>AI рассчитывает смету и состыковывает рейсы...</span>
+                  <div
+                    className="flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm"
+                    style={{
+                      background: palette.inset,
+                      borderColor: palette.border,
+                      color: palette.accent
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>ИИ планирует поездку...</span>
                   </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-3 bg-[#1A102F] border-t border-[#3B256B] flex gap-2 overflow-x-auto no-scrollbar">
-              <button onClick={() => handleSend("📉 Сделай дешевле на 20%")} className="text-xs bg-[#2C1E4A] hover:bg-[#3B256B] border border-[#3B256B] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow">
-                📉 Дешевле
+            <div
+              className="flex gap-2 overflow-x-auto border-t p-3"
+              style={{ background: palette.header, borderColor: palette.border }}
+            >
+              <button
+                onClick={sendCheaperRequest}
+                disabled={loading}
+                className="whitespace-nowrap rounded-lg border px-3 py-2 text-xs transition hover:brightness-110 disabled:opacity-50"
+                style={{ background: palette.card, borderColor: palette.border, color: "#E4E7F1" }}
+              >
+                ↓ Дешевле
               </button>
-              <button onClick={() => { togglePet(); handleSend("🐶 С питомцем"); }} className="text-xs bg-[#2C1E4A] hover:bg-[#3B256B] border border-[#3B256B] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition text-white shadow">
-                🐶 С питомцем
+              <button
+                onClick={togglePet}
+                disabled={loading}
+                className="whitespace-nowrap rounded-lg border px-3 py-2 text-xs transition hover:brightness-110 disabled:opacity-50"
+                style={{ background: palette.card, borderColor: palette.border, color: "#E4E7F1" }}
+              >
+                🐶 {activeChat.hasPet ? "Убрать питомца" : "С питомцем"}
               </button>
             </div>
 
-            <div className="p-3 bg-[#150D24] border-t border-[#3B256B] flex items-center space-x-2">
-              <input 
+            <form
+              className="flex items-center gap-2 border-t p-3"
+              style={{ background: palette.inset, borderColor: palette.border }}
+              onSubmit={event => {
+                event.preventDefault();
+                handleSend();
+              }}
+            >
+               <input
                 type="text"
                 value={inputQuery}
-                onChange={(e) => setInputQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Задайте вопрос или попросите изменить отель..."
-                className="flex-1 bg-[#2C1E4A] border border-[#3B256B] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#06B6D4] text-white placeholder-slate-400"
+                onChange={event => setInputQuery(event.target.value)}
+                placeholder="Напиши, что хочешь изменить..."
+                className="min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm text-white outline-none placeholder:text-slate-400"
+                style={{ background: palette.card, borderColor: palette.border }}
               />
-              <button 
-                onClick={() => handleSend()}
-                className="bg-[#06B6D4] hover:bg-[#0891B2] text-slate-950 p-2.5 rounded-xl transition shadow-md"
+              <button
+                type="submit"
+                disabled={loading || !inputQuery.trim()}
+                className="rounded-xl p-3 text-slate-900 transition hover:brightness-110 disabled:opacity-50"
+                style={{ background: palette.accent }}
+                aria-label="Отправить сообщение"
               >
-                <Send className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                <Send className="h-4 w-4 stroke-[2.5]" />
               </button>
-            </div>
-          </div>
-
-          {/* Правая колонка - Смета */}
-          <div className="lg:col-span-5 flex flex-col space-y-4 h-[calc(100vh-140px)] overflow-y-auto pr-1">
-            <div className="bg-[#2C1E4A] border border-[#3B256B] rounded-2xl p-5 shadow-2xl space-y-4">
-              
-              <div className="flex items-center justify-between border-b border-[#3B256B] pb-3">
-                <h2 className="font-bold text-base flex items-center space-x-2 text-white">
-                  <Compass className="w-5 h-5 text-[#F59E0B]" />
-                  <span>Сценарий: {currentDestination.city}</span>
+            </form>
+          </section>
+          
+          <aside className="flex h-[calc(100vh-140px)] flex-col gap-4 overflow-y-auto pr-1 lg:col-span-5">
+            <section
+              className="space-y-4 rounded-2xl border p-5 shadow-xl"
+              style={{ background: palette.card, borderColor: palette.border }}
+            >
+              <div
+                className="flex items-center justify-between gap-2 border-b pb-3"
+                style={{ borderColor: palette.border }}
+              >
+                <h2 className="flex items-center gap-2 text-base font-bold text-white">
+                  <Compass className="h-5 w-5" style={{ color: palette.gold }} />
+                  <span>План: {currentDestination.city}</span>
                 </h2>
-                <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full font-bold">
-                  Состыковано ✓
+                <span
+                  className="shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold"
+                  style={{
+                    background: "#25362F",
+                    borderColor: "#426957",
+                    color: "#B7E2C9"
+                  }}
+                >
+                  Пример маршрута
                 </span>
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-[#06B6D4]">Доступные отели ({currentDestination.country}):</span>
-                <div className="grid grid-cols-1 gap-2">
-                  {currentDestination.hotels.map(h => (
-                    <button
-                      key={h.id}
-                      onClick={() => updateSelectedHotel(h)}
-                      className={`p-3 rounded-xl text-left border text-xs transition flex items-center justify-between ${
-                        activeChat.selectedHotel.id === h.id 
-                          ? 'bg-[#06B6D4]/20 border-[#06B6D4] text-white font-bold shadow-lg' 
-                          : 'bg-[#150D24] border-[#3B256B] text-slate-300 hover:bg-[#201335]'
-                      }`}
+                <div
+                  className="flex items-center gap-2 text-xs font-semibold"
+                  style={{ color: palette.accent }}
+                >
+                  <MapPin className="h-4 w-4" />
+                  Варианты размещения
+                </div>
+
+                {hotelList.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    {hotelList.map(hotel => {
+                      const isSelected = selectedHotel?.id === hotel.id;
+
+                      return (
+                        <button
+                          key={hotel.id}
+                          onClick={() => updateSelectedHotel(hotel)}
+                          className="flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition hover:brightness-110"
+                          style={{
+                            background: isSelected ? "#303651" : palette.inset,
+                            borderColor: isSelected ? palette.accent : palette.border
+                          }}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-white">
+                              {hotel.name}
+                            </span>
+                            <span className="mt-1 block text-[10px]" style={{ color: palette.accent }}>
+                              {hotel.stars}
+                              {hotel.rating !== "—" && hotel.rating != null
+                                ? ` • оценка ${hotel.rating}`
+                                : ""}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-right">
+                            <span className="block text-xs font-bold" style={{ color: palette.gold }}>
+                              {formatPrice(hotel.price)}
+                            </span>
+                            <span className="block text-[9px] text-slate-400">
+                              {activeChat.trip ? "пример за ночь" : "примерная цена"}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p
+                    className="rounded-xl border p-3 text-xs leading-relaxed text-slate-300"
+                    style={{ background: palette.inset, borderColor: palette.border }}
+                  >
+                    ИИ пока не предложил отели. Напиши в чат, чтобы уточнить город или попросить подобрать варианты.
+                  </p>
+                )}
+              </div>
+
+              {selectedHotel && (
+                <div
+                  className="space-y-3 rounded-xl border p-4"
+                  style={{ background: palette.inset, borderColor: palette.border }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className="flex items-center gap-1.5 text-xs font-bold"
+                      style={{ color: palette.gold }}
                     >
-                      <div className="truncate pr-2">
-                        <div className="truncate text-sm text-white">{h.name}</div>
-                        <div className="text-[10px] text-[#06B6D4] mt-0.5">{h.stars} • {h.rating} / 10</div>
-                      </div>
-                      <div className="text-xs font-black text-[#FDE047] shrink-0">{h.price.toLocaleString()} ₽</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-[#150D24] border border-[#3B256B] rounded-xl p-4 space-y-2.5 shadow-md">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#F59E0B] flex items-center space-x-1">
-                    <Hotel className="w-3.5 h-3.5" />
-                    <span>ВЫБРАННЫЙ ОТЕЛЬ</span>
-                  </span>
-                  <span className="text-xs bg-[#2C1E4A] font-bold px-2 py-0.5 rounded text-[#06B6D4] border border-[#3B256B]">
-                    {activeChat.selectedHotel.rating} / 10
-                  </span>
-                </div>
-                <h4 className="font-bold text-base text-white">{activeChat.selectedHotel.name}</h4>
-                <p className="text-xs text-slate-300">{activeChat.selectedHotel.tags}</p>
-                
-                <div className="text-xs bg-[#1A102F] border border-[#F59E0B]/30 p-3 rounded-lg leading-relaxed space-y-1 text-slate-200">
-                  <div className="font-bold text-[#FDE047]">💡 Почему этот выбор:</div>
-                  <div>{activeChat.selectedHotel.reason}</div>
-                  <div className="text-amber-200/90 pt-1 flex items-center space-x-1">
-                    <AlertTriangle className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
-                    <span><b>Ограничение:</b> {activeChat.selectedHotel.risk}</span>
+                      <Hotel className="h-4 w-4" />
+                      ВЫБРАННЫЙ ОТЕЛЬ
+                    </span>
+                    <span
+                      className="rounded-md border px-2 py-1 text-[10px]"
+                      style={{
+                        background: palette.card,
+                        borderColor: palette.border,
+                        color: palette.accent
+                      }}
+                    >
+                      {selectedHotel.stars}
+                    </span>
                   </div>
-                </div>
-              </div>
 
-              <div className="bg-[#150D24] border border-[#3B256B] rounded-xl p-4 space-y-2 shadow-md">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#06B6D4] flex items-center space-x-1">
-                    <Plane className="w-3.5 h-3.5" />
-                    <span>АВИАПЕРЕЛЕТ</span>
-                  </span>
-                  <span className="text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-700/50 px-2 py-0.5 rounded">
-                    Состыкован
-                  </span>
-                </div>
-                <div className="text-xs font-semibold text-white">{currentDestination.flight}</div>
-                <div className="text-xs text-[#06B6D4]">Дата вылета: {currentDestination.flightDate}</div>
-              </div>
+                  <h3 className="text-base font-bold text-white">
+                    {selectedHotel.name}
+                  </h3>
 
-              {activeChat.hasPet && (
-                <div className="bg-[#3B256B] border border-[#06B6D4]/40 rounded-xl p-3 text-xs flex items-center justify-between text-white">
-                  <div className="flex items-center space-x-2">
-                    <Dog className="w-4 h-4 text-[#F59E0B]" />
-                    <span>Перевозка питомца в салоне</span>
+                  <p className="text-xs leading-relaxed text-slate-300">
+                    {selectedHotel.tags}
+                  </p>
+
+                  <div
+                    className="space-y-2 rounded-lg border p-3 text-xs leading-relaxed"
+                    style={{
+                      background: palette.card,
+                      borderColor: palette.border
+                    }}
+                  >
+                    <div className="font-bold" style={{ color: palette.gold }}>
+                      Почему этот вариант
+                    </div>
+                    <p className="text-slate-200">{selectedHotel.reason}</p>
+                    <div className="flex items-start gap-2 border-t pt-2 text-slate-300" style={{ borderColor: palette.border }}>
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: palette.gold }} />
+                      <span>{selectedHotel.risk}</span>
+                    </div>
                   </div>
-                  <span className="font-bold text-[#FDE047]">+4 500 ₽</span>
                 </div>
               )}
 
-              <div className="pt-3 border-t border-[#3B256B] flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-slate-300 block font-medium">Итого за весь тур:</span>
-                  <span className="text-2xl font-black text-[#FDE047] tracking-tight">
-                    {(activeChat.selectedHotel.price + (activeChat.hasPet ? 4500 : 0)).toLocaleString()} ₽
-                  </span>
+              <div
+                className="space-y-2 rounded-xl border p-4"
+                style={{ background: palette.inset, borderColor: palette.border }}
+              >
+                <div className="flex items-center gap-2 text-xs font-bold" style={{ color: palette.accent }}>
+                  <Plane className="h-4 w-4" />
+                  ПРЕДПОЛАГАЕМЫЙ ПЕРЕЛЁТ
                 </div>
-                
-                <button 
-                  onClick={() => setShowVoucher(true)}
-                  className="bg-gradient-to-r from-[#06B6D4] to-[#F59E0B] hover:opacity-90 text-slate-950 text-sm font-black px-6 py-3 rounded-xl transition shadow-lg active:scale-95"
-                >
-                  Забронировать
-                </button>
+                <p className="text-xs font-semibold leading-relaxed text-white">
+                  {currentDestination.flight || "Маршрут перелёта пока не указан."}
+                </p>
+                <p className="text-xs text-slate-300">
+                  {currentDestination.flightDate || "Даты поездки нужно уточнить."}
+                </p>
+                <p className="text-[10px] leading-relaxed text-slate-400">
+                  Направление и расписание приведены для примера. Перед покупкой проверь реальные рейсы.
+                </p>
               </div>
 
-            </div>
-          </div>
+              {activeChat.hasPet && (
+                <div
+                  className="flex items-center justify-between gap-2 rounded-xl border p-3 text-xs"
+                  style={{
+                    background: "#292E43",
+                    borderColor: palette.border
+                  }}
+                >
+                  <span className="flex items-center gap-2 text-slate-200">
+                    <Dog className="h-4 w-4" style={{ color: palette.accent }} />
+                    Поездка с питомцем
+                  </span>
+                  <span className="font-semibold" style={{ color: palette.gold }}>
+                    Условия уточняются
+                  </span>
+                </div>
+              )}
+
+              <div
+                className="flex items-center justify-between gap-3 border-t pt-4"
+                style={{ borderColor: palette.border }}
+              >
+                <div className="min-w-0">
+                  <span className="block text-xs font-medium text-slate-300">
+                    {activeChat.trip ? "Примерный бюджет поездки:" : "Примерная стоимость:"}
+                  </span>
+                  <span className="mt-1 block text-2xl font-black tracking-tight" style={{ color: palette.gold }}>
+                    {formatPrice(
+                      activeChat.trip
+                        ? (Number(currentDestination.budget) || selectedHotel?.price || 0) +
+                          (activeChat.hasPet ? Number(currentDestination.petFee) || 0 : 0)
+                        : (Number(selectedHotel?.price) || 0)
+                    )}
+                  </span>
+                  <span className="mt-1 block text-[10px] text-slate-400">
+                    Не является подтверждённым предложением
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setPostActionNotice("");
+                    setShowVoucher(true);
+                  }}
+                  className="shrink-0 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 shadow-md transition hover:brightness-110 active:scale-95"
+                  style={{ background: "linear-gradient(135deg, #B8B9F5, #E8D4A2)" }}
+                >
+                  Продолжить
+                </button>
+              </div>
+            </section>
+          </aside>
         </main>
       )}
 
-      {/* Модалка метрик с адаптивным скроллом */}
       {showMetricsModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1A102F] border border-[#06B6D4]/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl relative text-slate-100 no-scrollbar">
-            <button onClick={() => setShowMetricsModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div
+            className="relative max-h-[90vh] w-full max-w-2xl space-y-5 overflow-y-auto rounded-2xl border p-6 shadow-2xl"
+            style={{ background: palette.header, borderColor: palette.border }}
+          >
+            <button
+              onClick={() => setShowMetricsModal(false)}
+              className="absolute right-4 top-4 p-1 text-slate-400 hover:text-white"
+              aria-label="Закрыть метрики"
+            >
+              <X className="h-5 w-5" />
             </button>
-            <div className="flex items-center space-x-3 border-b border-[#3B256B] pb-3">
-              <ShieldCheck className="w-6 h-6 text-emerald-400" />
-              <h3 className="text-lg font-extrabold text-white">Детальный отчет качества работы AI-агента</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="bg-[#2C1E4A] p-4 rounded-xl border border-[#3B256B] space-y-1 shadow-md">
-                <div className="font-bold text-[#06B6D4]">Время до первой рекомендации</div>
-                <div className="text-xl font-black text-white">1.1 секунды</div>
-                <div className="text-slate-300">Замер с момента отправки запроса пользователем до вывода первой связки отеля и перелета.</div>
-              </div>
-              <div className="bg-[#2C1E4A] p-4 rounded-xl border border-[#3B256B] space-y-1 shadow-md">
-                <div className="font-bold text-[#06B6D4]">Успешность сценариев (Success Rate)</div>
-                <div className="text-xl font-black text-emerald-400">98.4%</div>
-                <div className="text-slate-300">Доля диалогов, успешно завершенных бронированием или выдачей готового плана.</div>
-              </div>
-              <div className="bg-[#2C1E4A] p-4 rounded-xl border border-[#3B256B] space-y-1 shadow-md">
-                <div className="font-bold text-[#06B6D4]">Ошибки состыковок рейсов и отелей</div>
-                <div className="text-xl font-black text-emerald-400">0.0%</div>
-                <div className="text-slate-300">Проверка временных зазоров между прилетом самолета и заселением в номер.</div>
-              </div>
-              <div className="bg-[#2C1E4A] p-4 rounded-xl border border-[#3B256B] space-y-1 shadow-md">
-                <div className="font-bold text-[#06B6D4]">Среднее количество уточнений</div>
-                <div className="text-xl font-black text-[#FDE047]">1.2 вопроса</div>
-                <div className="text-slate-300">Агент задает минимум вопросов для построения точного и удовлетворяющего плана.</div>
+
+            <div className="flex items-center gap-3 border-b pb-3" style={{ borderColor: palette.border }}>
+              <ShieldCheck className="h-6 w-6" style={{ color: palette.accent }} />
+              <div>
+                <h3 className="pr-6 text-lg font-extrabold text-white">
+                  Метрики AI-агента
+                </h3>
+                <p className="mt-1 text-xs text-slate-400">
+                  Демонстрационный экран проекта
+                </p>
               </div>
             </div>
 
-            <button 
+            <div className="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
+              {[
+                {
+                  title: "Ответы ИИ",
+                  value: "GigaChat",
+                  description: "Модель отвечает на запросы и помогает составлять план поездки."
+                },
+                {
+                  title: "Поддержка направлений",
+                  value: "Весь мир",
+                  description: "Можно запросить поездку в произвольный город или страну."
+                },
+                {
+                  title: "Подбор отелей",
+                  value: "AI-рекомендации",
+                  description: "Названия, цены и оценки могут быть демонстрационными."
+                },
+                {
+                  title: "Бронирование",
+                  value: "Не подключено",
+                  description: "Покупка билетов и оформление реальных бронирований пока не выполняются."
+                }
+              ].map(item => (
+                <div
+                  key={item.title}
+                  className="space-y-2 rounded-xl border p-4"
+                  style={{ background: palette.card, borderColor: palette.border }}
+                >
+                  <div className="font-bold" style={{ color: palette.accent }}>
+                    {item.title}
+                  </div>
+                  <div className="text-lg font-black text-white">{item.value}</div>
+                  <p className="leading-relaxed text-slate-300">{item.description}</p>
+                </div>
+              ))}
+            </div>
+
+            <button
               onClick={() => setShowMetricsModal(false)}
-              className="w-full bg-[#06B6D4] hover:bg-[#0891B2] text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-md"
+              className="w-full rounded-xl py-3 text-sm font-bold text-slate-900 transition hover:brightness-110"
+              style={{ background: palette.accent }}
             >
-              Закрыть отчет
+              Закрыть
             </button>
           </div>
         </div>
       )}
 
-      {/* Окно ваучера */}
       {showVoucher && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1A102F] border border-[#F59E0B]/50 rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl relative">
-            <button onClick={() => setShowVoucher(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div
+            className="relative w-full max-w-md space-y-4 rounded-2xl border p-6 text-center shadow-2xl"
+            style={{ background: palette.header, borderColor: palette.border }}
+          >
+            <button
+              onClick={() => setShowVoucher(false)}
+              className="absolute right-4 top-4 p-1 text-slate-400 hover:text-white"
+              aria-label="Закрыть окно"
+            >
+              <X className="h-5 w-5" />
             </button>
-            <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <CheckCircle2 className="w-8 h-8" />
+
+            <div
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border"
+              style={{
+                background: "#29362F",
+                borderColor: "#426957",
+                color: "#B7E2C9"
+              }}
+            >
+              <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-extrabold text-white">Тур успешно забронирован!</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Ваучер на поездку в {currentDestination.country} отправлен вам на почту. Все документы зафиксированы.
+
+            <h3 className="text-xl font-extrabold text-white">
+              План поездки готов к обсуждению!
+            </h3>
+
+            <p className="text-xs leading-relaxed text-slate-300">
+              Это демонстрационный проект. Билеты не куплены, отель не забронирован, а ваучер не создан. Перед реальной поездкой нужно проверить цены, наличие мест и условия.
             </p>
 
-            <div className="border-t border-[#3B256B] pt-3 text-left space-y-2">
-              <span className="text-xs font-bold text-[#06B6D4] block">Пост-обслуживание туриста:</span>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <button 
-                  onClick={() => setPostActionNotice('Ранний заезд запрошен в отель!')}
-                  className="bg-[#2C1E4A] hover:bg-[#3B256B] p-2 rounded-lg text-slate-200 border border-[#3B256B] transition"
+            <div
+              className="space-y-2 rounded-xl border p-3 text-left"
+              style={{ background: palette.card, borderColor: palette.border }}
+            >
+              <span className="block text-xs font-bold" style={{ color: palette.accent }}>
+                Что можно сделать дальше
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setShowVoucher(false);
+                    handleSend("Помоги проверить, какие детали поездки нужно уточнить перед реальным бронированием.");
+                  }}
+                  className="rounded-lg border p-2 text-xs text-slate-200 transition hover:brightness-110"
+                  style={{ background: palette.inset, borderColor: palette.border }}
                 >
-                  🏨 Ранний заезд
+                  Проверить детали
                 </button>
-                <button 
-                  onClick={() => setPostActionNotice('Индивидуальный трансфер зафиксирован!')}
-                  className="bg-[#2C1E4A] hover:bg-[#3B256B] p-2 rounded-lg text-slate-200 border border-[#3B256B] transition"
+                <button
+                  onClick={() => {
+                    setShowVoucher(false);
+                    handleSend("Предложи более бюджетный вариант моей поездки.");
+                  }}
+                  className="rounded-lg border p-2 text-xs text-slate-200 transition hover:brightness-110"
+                  style={{ background: palette.inset, borderColor: palette.border }}
                 >
-                  🚖 VIP Трансфер
+                  Снизить бюджет
                 </button>
               </div>
-              {postActionNotice && (
-                <div className="text-xs text-emerald-300 bg-emerald-950/80 p-2 rounded-lg text-center font-medium border border-emerald-700/50">
-                  ✓ {postActionNotice}
-                </div>
-              )}
             </div>
 
-            <button 
-              onClick={() => { setShowVoucher(false); setIsChatOpen(false); setPostActionNotice(''); }}
-              className="w-full bg-gradient-to-r from-[#06B6D4] to-[#F59E0B] hover:opacity-90 text-slate-950 py-3 rounded-xl font-black text-sm transition shadow-lg mt-2"
+            <button
+              onClick={() => {
+                setShowVoucher(false);
+                setPostActionNotice("");
+                goHome();
+              }}
+              className="w-full rounded-xl py-3 text-sm font-bold text-slate-900 transition hover:brightness-110"
+              style={{ background: "linear-gradient(135deg, #B8B9F5, #E8D4A2)" }}
             >
               Вернуться на главную
             </button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
