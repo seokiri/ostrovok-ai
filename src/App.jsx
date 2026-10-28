@@ -398,7 +398,7 @@ export default function App() {
               <span className="bg-gradient-to-r from-[#06B6D4] via-[#FDE047] to-[#F59E0B] bg-clip-text text-transparent">Умный AI устроит всю поездку.</span>
             </h1>
             <p className="text-slate-300 text-sm md:text-base max-w-xl mx-auto font-medium">
-              Лента направлений листается автоматически или вручную. Выберите карточку для старта чата.
+              Выберите карточку для старта чата или напишите свой маршрут.
             </p>
           </div>
 
