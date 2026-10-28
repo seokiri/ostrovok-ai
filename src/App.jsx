@@ -181,6 +181,8 @@ export default function App() {
     setTimeout(() => {
       let aiResponse = '';
       let targetDestKey = activeChat.destinationKey;
+      let updatedHotel = activeChat.selectedHotel;
+      let updatedPet = activeChat.hasPet;
       const q = query.toLowerCase();
 
       if (q.includes('япони') || q.includes('токио') || q.includes('киото')) targetDestKey = 'japan';
@@ -189,15 +191,19 @@ export default function App() {
       else if (q.includes('турци') || q.includes('анталь')) targetDestKey = 'turkey';
 
       const destData = destinationDatabase[targetDestKey];
-      let newHotel = destinationDatabase[targetDestKey].hotels[0];
 
       if (q.includes('дешевле') || q.includes('бюджет')) {
-        if (destData.hotels[1]) newHotel = destData.hotels[1];
-        aiResponse = `Пересчитал стоимость в текущем чате. Выбран отель ${newHotel.name}, цена снижена!`;
+        if (destData.hotels[1]) {
+          updatedHotel = destData.hotels[1];
+          aiResponse = `Пересчитал стоимость! Переключил на более доступный отель: ${updatedHotel.name}. Цена снижена.`;
+        } else {
+          aiResponse = 'Для этого направления доступен премиум-сегмент, стоимость зафиксирована на оптимальном уровне.';
+        }
       } else if (q.includes('собака') || q.includes('питомец')) {
-        aiResponse = 'Добавил опцию Pet-Friendly для текущего тура (+4 500 ₽). Переноска и документы учтены.';
+        updatedPet = true;
+        aiResponse = 'Добавил опцию Pet-Friendly (+4 500 ₽). Условия авиаперевозки питомца учтены в сметте.';
       } else {
-        aiResponse = `Обработал запрос для направления «${destData.country}». Параметры и отели обновлены в правой панели!`;
+        aiResponse = `Обработал запрос для направления «${destData.country}». Данные и отели обновлены в правой панели!`;
       }
 
       setChats(prevChats => prevChats.map(chat => {
@@ -205,7 +211,8 @@ export default function App() {
           return {
             ...chat,
             destinationKey: targetDestKey,
-            selectedHotel: newHotel,
+            selectedHotel: updatedHotel,
+            hasPet: updatedPet,
             title: `${destData.country} • ${query.slice(0, 12)}`,
             messages: [...chat.messages, { sender: 'ai', text: aiResponse }]
           };
@@ -213,7 +220,7 @@ export default function App() {
         return chat;
       }));
       setLoading(false);
-    }, 900);
+    }, 800);
   };
 
   const updateSelectedHotel = (hotel) => {
@@ -230,7 +237,13 @@ export default function App() {
     }));
   };
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#121B2B] via-[#0E2238] to-[#1F2937] text-slate-100 flex flex-col font-sans selection:bg-teal-500 selection:text-white">
+    <div 
+      className="w-full text-slate-100 flex flex-col font-sans selection:bg-teal-500 selection:text-white"
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%)'
+      }}
+    >
       
       {/* Боковая шторка истории */}
       {isSidebarOpen && (
@@ -447,7 +460,6 @@ export default function App() {
               </button>
             </div>
           </div>
-
           {/* Правая колонка - Смета */}
           <div className="lg:col-span-5 flex flex-col space-y-4 h-[calc(100vh-140px)] overflow-y-auto pr-1">
             <div className="bg-[#0E2238]/95 border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4">
@@ -552,6 +564,7 @@ export default function App() {
           </div>
         </main>
       )}
+
       {/* Модалка метрик с адаптивным скроллом для телефонов */}
       {showMetricsModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
