@@ -132,7 +132,7 @@ app.post("/api/chat", async (req, res) => {
             Accept: "application/json",
           },
           body: JSON.stringify({
-            model: "GigaChat",
+            model: "GigaChat-3-Ultra",
             messages: [
               {
                 role: "system",
