@@ -213,71 +213,93 @@ export default function App() {
     setIsSidebarOpen(false);
     window.history.pushState({ chatOpen: true }, '');
   };
+  
+const handleSend = async (textToSend) => {
+  const query = (textToSend || inputQuery).trim();
 
-  const handleSend = (textToSend) => {
-    const query = textToSend || inputQuery;
-    if (!query.trim()) return;
+  if (!query || loading) return;
 
-    setInputQuery('');
-    
-    setChats(prevChats => prevChats.map(chat => {
-      if (chat.id === activeChatId) {
-        return {
-          ...chat,
-          messages: [...chat.messages, { sender: 'user', text: query }]
-        };
-      }
-      return chat;
-    }));
+  const chatId = activeChatId;
 
-    setLoading(true);
+  setInputQuery('');
 
-    setTimeout(() => {
-      let aiResponse = '';
-      let targetDestKey = activeChat.destinationKey;
-      let updatedHotel = activeChat.selectedHotel;
-      let updatedPet = activeChat.hasPet;
-      const q = query.toLowerCase();
-
-      if (q.includes('япони') || q.includes('токио') || q.includes('киото')) targetDestKey = 'japan';
-      else if (q.includes('грузи') || q.includes('тбилиси')) targetDestKey = 'georgia';
-      else if (q.includes('алтай') || q.includes('горы')) targetDestKey = 'altai';
-      else if (q.includes('турци') || q.includes('анталь')) targetDestKey = 'turkey';
-      else if (q.includes('дубай') || q.includes('оаэ')) targetDestKey = 'dubai';
-      else if (q.includes('бали')) targetDestKey = 'bali';
-
-      const destData = destinationDatabase[targetDestKey];
-
-      if (q.includes('дешевле') || q.includes('бюджет')) {
-        if (destData.hotels[1]) {
-          updatedHotel = destData.hotels[1];
-          aiResponse = `Пересчитал стоимость! Переключил на более доступный отель: ${updatedHotel.name}. Цена снижена.`;
-        } else {
-          aiResponse = 'Для этого направления доступен премиум-сегмент, стоимость зафиксирована на оптимальном уровне.';
-        }
-      } else if (q.includes('собака') || q.includes('питомец')) {
-        updatedPet = true;
-        aiResponse = 'Добавил опцию Pet-Friendly (+4 500 ₽). Условия авиаперевозки питомца учтены в сметте.';
-      } else {
-        aiResponse = `Обработал запрос для направления «${destData.country}». Данные и отели обновлены в правой панели!`;
-      }
-
-      setChats(prevChats => prevChats.map(chat => {
-        if (chat.id === activeChatId) {
-          return {
+  setChats(prevChats =>
+    prevChats.map(chat =>
+      chat.id === chatId
+        ? {
             ...chat,
-            destinationKey: targetDestKey,
-            selectedHotel: updatedHotel,
-            hasPet: updatedPet,
-            title: `${destData.country} • ${query.slice(0, 12)}`,
-            messages: [...chat.messages, { sender: 'ai', text: aiResponse }]
-          };
-        }
-        return chat;
-      }));
-      setLoading(false);
-    }, 800);
-  };
+            messages: [
+              ...chat.messages,
+              { sender: 'user', text: query }
+            ]
+          }
+        : chat
+    )
+  );
+
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      'https://ostrovok-ai.onrender.com/api/chat',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: query })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || 'Не удалось получить ответ от ИИ.'
+      );
+    }
+
+    setChats(prevChats =>
+      prevChats.map(chat =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              title:
+                chat.title === 'Новый диалог с агентом'
+                  ? query.slice(0, 32)
+                  : chat.title,
+              messages: [
+                ...chat.messages,
+                { sender: 'ai', text: data.answer }
+              ]
+            }
+          : chat
+      )
+    );
+  } catch (error) {
+    setChats(prevChats =>
+      prevChats.map(chat =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              messages: [
+                ...chat.messages,
+                {
+                  sender: 'ai',
+                  text:
+                    'Не удалось связаться с ИИ. ' +
+                    'Попробуйте ещё раз через несколько секунд. ' +
+                    (error.message || '')
+                }
+              ]
+            }
+          : chat
+      )
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateSelectedHotel = (hotel) => {
     setChats(prevChats => prevChats.map(chat => {
